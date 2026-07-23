@@ -29,7 +29,6 @@ function calculateProfit() {
   const adRate = safeRate(numberValue('profit-ad'));
   const returnRate = safeRate(numberValue('profit-return'));
   const returnLoss = numberValue('profit-return-loss');
-
   const keptRate = 1 - returnRate;
   const expectedRevenue = price * keptRate;
   const expectedProductCost = cost * keptRate;
@@ -88,28 +87,22 @@ function calculatePrice() {
   const targetProfit = numberValue('price-target');
   const keptRate = 1 - returnRate;
   const revenueFactor = keptRate * (1 - feeRate) - adRate;
-
   let recommendedPrice = 0;
   if (revenueFactor > 0) {
     recommendedPrice = (targetProfit + (cost * keptRate) + extra) / revenueFactor;
     recommendedPrice = Math.ceil(recommendedPrice / 1000) * 1000;
   }
-
-  const expectedProfit = recommendedPrice > 0
-    ? recommendedPrice * revenueFactor - cost * keptRate - extra
-    : 0;
+  const expectedProfit = recommendedPrice > 0 ? recommendedPrice * revenueFactor - cost * keptRate - extra : 0;
   const expectedMargin = recommendedPrice > 0 ? (expectedProfit / recommendedPrice) * 100 : 0;
-
   document.getElementById('price-value').textContent = recommendedPrice > 0 ? money(recommendedPrice) : '계산 불가';
   document.getElementById('price-profit').textContent = money(expectedProfit);
   document.getElementById('price-margin').textContent = percent(expectedMargin);
-
   if (revenueFactor <= 0) {
     setDiagnosis('price-diagnosis', '가격 경고', '수수료·광고비·반품률 가정이 지나치게 높아 어떤 판매가에서도 목표 이익을 계산하기 어렵습니다. 비용 비율을 먼저 낮추세요.');
   } else if (expectedMargin < 10) {
     setDiagnosis('price-diagnosis', '가격 팁', '목표 이익은 달성하지만 판매가 대비 이익 여유가 낮습니다. 할인 판매 계획이 있다면 정상가를 더 높게 잡아야 합니다.');
   } else {
-    setDiagnosis('price-diagnosis', '가격 팁', `계산 가격은 최소 기준입니다. 실제 판매가는 시장 가격대, 부가세, 쿠폰과 할인 계획까지 반영해 결정하세요.`);
+    setDiagnosis('price-diagnosis', '가격 팁', '계산 가격은 최소 기준입니다. 실제 판매가는 시장 가격대, 부가세, 쿠폰과 할인 계획까지 반영해 결정하세요.');
   }
 }
 
@@ -122,11 +115,9 @@ function calculateBreakEven() {
   const units = contribution > 0 ? Math.ceil(fixedCost / contribution) : 0;
   const sales = units * averagePrice;
   const dailyUnits = units / operatingDays;
-
   document.getElementById('bep-units').textContent = contribution > 0 ? `${units.toLocaleString('ko-KR')}개` : '계산 불가';
   document.getElementById('bep-sales').textContent = money(sales);
   document.getElementById('bep-daily').textContent = contribution > 0 ? `${dailyUnits.toFixed(1)}개` : '-';
-
   const badge = document.getElementById('bep-badge');
   if (contribution <= 0) {
     setBadge(badge, 'danger', '건당 손실 구조');
@@ -153,11 +144,9 @@ function calculateInventory() {
   const reorderPoint = Math.ceil(dailySales * leadWeeks * 7 + safetyStock);
   const targetStock = Math.ceil(monthlySales * targetMonths + safetyStock);
   const suggestedOrder = Math.max(targetStock - totalAvailable, 0);
-
   document.getElementById('inventory-months').textContent = monthlySales > 0 ? `${monthsOnHand.toFixed(1)}개월` : '판매량 필요';
   document.getElementById('inventory-rop').textContent = `${reorderPoint.toLocaleString('ko-KR')}개`;
   document.getElementById('inventory-order').textContent = `${suggestedOrder.toLocaleString('ko-KR')}개`;
-
   const badge = document.getElementById('inventory-badge');
   if (monthlySales <= 0) {
     setBadge(badge, 'neutral', '판매 데이터 필요');
@@ -211,6 +200,54 @@ document.querySelectorAll('.copy-button').forEach((button) => {
     }
   });
 });
+
+const storageKey = 'fashionops-main-calculator-values-v1';
+const calculatorInputs = [...document.querySelectorAll('#tools input[id]')];
+const defaultValues = Object.fromEntries(calculatorInputs.map((input) => [input.id, input.defaultValue]));
+
+try {
+  const savedValues = JSON.parse(localStorage.getItem(storageKey) || '{}');
+  calculatorInputs.forEach((input) => {
+    if (Object.prototype.hasOwnProperty.call(savedValues, input.id)) input.value = savedValues[input.id];
+  });
+} catch (error) {
+  localStorage.removeItem(storageKey);
+}
+
+function saveCalculatorInputs() {
+  try {
+    const values = Object.fromEntries(calculatorInputs.map((input) => [input.id, input.value]));
+    localStorage.setItem(storageKey, JSON.stringify(values));
+  } catch (error) {
+    // Storage can be unavailable in private browsing. Calculators still work without it.
+  }
+}
+
+calculatorInputs.forEach((input) => input.addEventListener('input', saveCalculatorInputs));
+
+Object.entries(calculators).forEach(([formId, calculator]) => {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  const resetButton = document.createElement('button');
+  resetButton.type = 'button';
+  resetButton.className = 'copy-button';
+  resetButton.textContent = '기본값으로 초기화';
+  resetButton.addEventListener('click', () => {
+    form.querySelectorAll('input[id]').forEach((input) => { input.value = defaultValues[input.id] ?? input.defaultValue; });
+    saveCalculatorInputs();
+    calculator();
+  });
+  form.appendChild(resetButton);
+});
+
+const mainNavigation = document.querySelector('.main-nav');
+if (mainNavigation && !mainNavigation.querySelector('a[href="resources.html"]')) {
+  const resourceLink = document.createElement('a');
+  resourceLink.href = 'resources.html';
+  resourceLink.textContent = '전체 도구';
+  const callToAction = mainNavigation.querySelector('.nav-cta');
+  mainNavigation.insertBefore(resourceLink, callToAction || null);
+}
 
 calculateProfit();
 calculatePrice();
