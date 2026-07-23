@@ -1,0 +1,18 @@
+{
+  "name": "FashionOps - 패션 셀러 수익 분석",
+  "short_name": "FashionOps",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f7f9",
+  "theme_color": "#ffffff",
+  "lang": "ko-KR",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
