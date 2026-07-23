@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://1st-project-3aj.pages.dev/sitemap.xml
