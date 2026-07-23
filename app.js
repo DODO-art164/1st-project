@@ -1,10 +1,218 @@
-const money=n=>Math.round(n).toLocaleString('ko-KR')+'원';
-const num=id=>Number(document.getElementById(id).value)||0;
-function badge(el,type,text){el.className='result-badge '+type;el.textContent=text}
-function calcProfit(){const p=num('profit-price'),c=num('profit-cost'),pack=num('profit-pack'),ship=num('profit-ship'),fee=(num('profit-platform')+num('profit-payment'))/100,ad=num('profit-ad')/100,ret=num('profit-return')/100,loss=num('profit-return-loss');const sales=p*(1-ret);const fees=p*(fee+ad);const profit=sales-c-pack-ship-fees-(ret*loss);const margin=p?profit/p*100:0;document.getElementById('profit-value').textContent=money(profit);document.getElementById('profit-margin').textContent=margin.toFixed(1)+'%';document.getElementById('profit-cost-rate').textContent=(c/p*100).toFixed(1)+'%';document.getElementById('profit-roas').textContent=(ad?1/ad:0).toFixed(2)+'배';const b=document.getElementById('profit-badge');if(margin>=25)badge(b,'good','수익 구조 양호');else if(margin>=10)badge(b,'warning','개선 필요');else badge(b,'danger','적자 위험');document.getElementById('profit-diagnosis').innerHTML='<span>진단</span><p>'+(margin>=25?'현재 구조는 광고 확대를 검토할 수 있습니다.':margin>=10?'원가·광고비·판매가 중 조정 가능한 항목을 확인하세요.':'가격 또는 비용 구조 개선이 우선입니다.')+'</p>';const rows=[['원가',c],['수수료·광고',fees],['배송·포장',ship],['순이익',profit]];document.getElementById('profit-breakdown').innerHTML=rows.map(x=>`<div class="breakdown-row ${x[0]=='순이익'?'profit':''}"><span>${x[0]}</span><div class="breakdown-track"><i style="width:${Math.min(Math.abs(x[1]/p*100),100)}%"></i></div><b>${money(x[1])}</b></div>`).join('')}
-function calcPrice(){const c=num('price-cost')+num('price-extra'),rate=(num('price-fee')+num('price-ad'))/100,ret=num('price-return')/100,target=num('price-target');let price=c+target;price=price/(1-rate);price=price/(1-ret);price=Math.ceil(price/1000)*1000;document.getElementById('price-value').textContent=money(price);document.getElementById('price-profit').textContent=money(target);document.getElementById('price-margin').textContent=(target/price*100).toFixed(1)+'%';}
-function calcBep(){const fixed=num('bep-fixed'),price=num('bep-price'),variable=num('bep-variable'),days=num('bep-days');const margin=price-variable;const units=margin>0?Math.ceil(fixed/margin):0;document.getElementById('bep-units').textContent=units.toLocaleString()+'개';document.getElementById('bep-sales').textContent=money(units*price);document.getElementById('bep-daily').textContent=(units/days).toFixed(1)+'개';}
-function calcInventory(){const stock=num('inventory-stock')+num('inventory-incoming'),sales=num('inventory-sales'),lead=num('inventory-lead'),safe=num('inventory-safety'),target=num('inventory-target');const months=sales?stock/sales:0;const daily=sales/30;const rop=Math.ceil(daily*(lead*7)+safe);document.getElementById('inventory-months').textContent=months.toFixed(1)+'개월';document.getElementById('inventory-rop').textContent=rop+'개';document.getElementById('inventory-order').textContent=Math.max(rop-stock,0)+'개';const b=document.getElementById('inventory-badge');if(months>target*1.5)badge(b,'danger','과다 재고');else if(months>target)badge(b,'warning','주의');else badge(b,'good','적정')}
-['profit-form','price-form','bep-form','inventory-form'].forEach(id=>document.getElementById(id).addEventListener('submit',e=>{e.preventDefault();({ 'profit-form':calcProfit,'price-form':calcPrice,'bep-form':calcBep,'inventory-form':calcInventory}[id])()}));document.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{calcProfit();calcPrice();calcBep();calcInventory()}));
-document.querySelectorAll('.copy-button').forEach(btn=>btn.onclick=()=>{const t=document.getElementById(btn.dataset.copyTarget).innerText;navigator.clipboard?.writeText(t);const toast=document.getElementById('toast');toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)});
-calcProfit();calcPrice();calcBep();calcInventory();
+const money = (value) => `${Math.round(value).toLocaleString('ko-KR')}원`;
+const numberValue = (id) => {
+  const element = document.getElementById(id);
+  return element ? Math.max(Number(element.value) || 0, 0) : 0;
+};
+const percent = (value) => `${Number.isFinite(value) ? value.toFixed(1) : '0.0'}%`;
+
+function setBadge(element, type, text) {
+  if (!element) return;
+  element.className = `result-badge ${type}`;
+  element.textContent = text;
+}
+
+function setDiagnosis(id, label, text) {
+  const element = document.getElementById(id);
+  if (element) element.innerHTML = `<span>${label}</span><p>${text}</p>`;
+}
+
+function safeRate(value) {
+  return Math.min(Math.max(value / 100, 0), 0.99);
+}
+
+function calculateProfit() {
+  const price = numberValue('profit-price');
+  const cost = numberValue('profit-cost');
+  const packaging = numberValue('profit-pack');
+  const shipping = numberValue('profit-ship');
+  const feeRate = safeRate(numberValue('profit-platform') + numberValue('profit-payment'));
+  const adRate = safeRate(numberValue('profit-ad'));
+  const returnRate = safeRate(numberValue('profit-return'));
+  const returnLoss = numberValue('profit-return-loss');
+
+  const keptRate = 1 - returnRate;
+  const expectedRevenue = price * keptRate;
+  const expectedProductCost = cost * keptRate;
+  const expectedFees = expectedRevenue * feeRate;
+  const expectedAdCost = price * adRate;
+  const expectedReturnLoss = returnRate * returnLoss;
+  const expectedProfit = expectedRevenue - expectedProductCost - packaging - shipping - expectedFees - expectedAdCost - expectedReturnLoss;
+  const margin = price > 0 ? (expectedProfit / price) * 100 : 0;
+  const costRate = price > 0 ? (expectedProductCost / price) * 100 : 0;
+  const contributionBeforeAds = expectedProfit + expectedAdCost;
+  const breakEvenRoas = contributionBeforeAds > 0 ? (expectedRevenue / contributionBeforeAds) * 100 : 0;
+
+  document.getElementById('profit-value').textContent = money(expectedProfit);
+  document.getElementById('profit-margin').textContent = percent(margin);
+  document.getElementById('profit-cost-rate').textContent = percent(costRate);
+  document.getElementById('profit-roas').textContent = breakEvenRoas > 0 ? `${Math.ceil(breakEvenRoas)}%` : '달성 불가';
+
+  const badge = document.getElementById('profit-badge');
+  if (expectedProfit < 0) {
+    setBadge(badge, 'danger', '판매할수록 손실');
+    setDiagnosis('profit-diagnosis', '긴급 진단', `판매 1건당 약 ${money(Math.abs(expectedProfit))}의 손실이 예상됩니다. 광고 확대보다 판매가·원가·수수료 구조를 먼저 조정하세요.`);
+  } else if (margin < 10) {
+    setBadge(badge, 'danger', '이익 여유 부족');
+    setDiagnosis('profit-diagnosis', '진단', '할인이나 반품률 상승에 쉽게 적자로 전환될 수 있습니다. 판매가 인상 또는 원가 절감을 우선 검토하세요.');
+  } else if (margin < 25) {
+    setBadge(badge, 'warning', '개선 여지 있음');
+    setDiagnosis('profit-diagnosis', '진단', '기본 수익은 남지만 광고비와 할인 폭을 키우기 전 민감도 점검이 필요합니다.');
+  } else {
+    setBadge(badge, 'good', '수익 구조 양호');
+    setDiagnosis('profit-diagnosis', '진단', '현재 가정에서는 비교적 안정적인 이익 구조입니다. 실제 반품률과 광고비를 매월 업데이트해 유지 여부를 확인하세요.');
+  }
+
+  const rows = [
+    ['상품 원가', expectedProductCost],
+    ['수수료', expectedFees],
+    ['광고비', expectedAdCost],
+    ['배송·포장', shipping + packaging],
+    ['반품 손실', expectedReturnLoss],
+    ['순이익', expectedProfit]
+  ];
+  const denominator = Math.max(price, 1);
+  document.getElementById('profit-breakdown').innerHTML = rows.map(([label, value]) => `
+    <div class="breakdown-row ${label === '순이익' ? 'profit' : ''}">
+      <span>${label}</span>
+      <div class="breakdown-track"><i style="width:${Math.min(Math.abs(value / denominator) * 100, 100)}%"></i></div>
+      <b>${money(value)}</b>
+    </div>`).join('');
+}
+
+function calculatePrice() {
+  const cost = numberValue('price-cost');
+  const extra = numberValue('price-extra');
+  const feeRate = safeRate(numberValue('price-fee'));
+  const adRate = safeRate(numberValue('price-ad'));
+  const returnRate = safeRate(numberValue('price-return'));
+  const targetProfit = numberValue('price-target');
+  const keptRate = 1 - returnRate;
+  const revenueFactor = keptRate * (1 - feeRate) - adRate;
+
+  let recommendedPrice = 0;
+  if (revenueFactor > 0) {
+    recommendedPrice = (targetProfit + (cost * keptRate) + extra) / revenueFactor;
+    recommendedPrice = Math.ceil(recommendedPrice / 1000) * 1000;
+  }
+
+  const expectedProfit = recommendedPrice > 0
+    ? recommendedPrice * revenueFactor - cost * keptRate - extra
+    : 0;
+  const expectedMargin = recommendedPrice > 0 ? (expectedProfit / recommendedPrice) * 100 : 0;
+
+  document.getElementById('price-value').textContent = recommendedPrice > 0 ? money(recommendedPrice) : '계산 불가';
+  document.getElementById('price-profit').textContent = money(expectedProfit);
+  document.getElementById('price-margin').textContent = percent(expectedMargin);
+
+  if (revenueFactor <= 0) {
+    setDiagnosis('price-diagnosis', '가격 경고', '수수료·광고비·반품률 가정이 지나치게 높아 어떤 판매가에서도 목표 이익을 계산하기 어렵습니다. 비용 비율을 먼저 낮추세요.');
+  } else if (expectedMargin < 10) {
+    setDiagnosis('price-diagnosis', '가격 팁', '목표 이익은 달성하지만 판매가 대비 이익 여유가 낮습니다. 할인 판매 계획이 있다면 정상가를 더 높게 잡아야 합니다.');
+  } else {
+    setDiagnosis('price-diagnosis', '가격 팁', `계산 가격은 최소 기준입니다. 실제 판매가는 시장 가격대, 부가세, 쿠폰과 할인 계획까지 반영해 결정하세요.`);
+  }
+}
+
+function calculateBreakEven() {
+  const fixedCost = numberValue('bep-fixed');
+  const averagePrice = numberValue('bep-price');
+  const variableCost = numberValue('bep-variable');
+  const operatingDays = Math.max(numberValue('bep-days'), 1);
+  const contribution = averagePrice - variableCost;
+  const units = contribution > 0 ? Math.ceil(fixedCost / contribution) : 0;
+  const sales = units * averagePrice;
+  const dailyUnits = units / operatingDays;
+
+  document.getElementById('bep-units').textContent = contribution > 0 ? `${units.toLocaleString('ko-KR')}개` : '계산 불가';
+  document.getElementById('bep-sales').textContent = money(sales);
+  document.getElementById('bep-daily').textContent = contribution > 0 ? `${dailyUnits.toFixed(1)}개` : '-';
+
+  const badge = document.getElementById('bep-badge');
+  if (contribution <= 0) {
+    setBadge(badge, 'danger', '건당 손실 구조');
+    setDiagnosis('bep-diagnosis', '긴급 진단', '평균 판매가가 건당 변동비보다 낮거나 같습니다. 판매량을 늘려도 고정비를 회수할 수 없습니다.');
+  } else if (dailyUnits >= 20) {
+    setBadge(badge, 'warning', '높은 판매 목표');
+    setDiagnosis('bep-diagnosis', '운영 팁', '하루 목표 판매량이 높습니다. 고정비 절감이나 건당 공헌이익 개선 시나리오를 함께 비교하세요.');
+  } else {
+    setBadge(badge, 'good', '목표 설정 가능');
+    setDiagnosis('bep-diagnosis', '운영 팁', `월 ${units.toLocaleString('ko-KR')}개를 넘긴 이후부터 추가 판매분이 영업이익에 기여합니다.`);
+  }
+}
+
+function calculateInventory() {
+  const onHand = numberValue('inventory-stock');
+  const monthlySales = numberValue('inventory-sales');
+  const incoming = numberValue('inventory-incoming');
+  const leadWeeks = numberValue('inventory-lead');
+  const safetyStock = numberValue('inventory-safety');
+  const targetMonths = numberValue('inventory-target');
+  const totalAvailable = onHand + incoming;
+  const monthsOnHand = monthlySales > 0 ? totalAvailable / monthlySales : 0;
+  const dailySales = monthlySales / 30;
+  const reorderPoint = Math.ceil(dailySales * leadWeeks * 7 + safetyStock);
+  const targetStock = Math.ceil(monthlySales * targetMonths + safetyStock);
+  const suggestedOrder = Math.max(targetStock - totalAvailable, 0);
+
+  document.getElementById('inventory-months').textContent = monthlySales > 0 ? `${monthsOnHand.toFixed(1)}개월` : '판매량 필요';
+  document.getElementById('inventory-rop').textContent = `${reorderPoint.toLocaleString('ko-KR')}개`;
+  document.getElementById('inventory-order').textContent = `${suggestedOrder.toLocaleString('ko-KR')}개`;
+
+  const badge = document.getElementById('inventory-badge');
+  if (monthlySales <= 0) {
+    setBadge(badge, 'neutral', '판매 데이터 필요');
+    setDiagnosis('inventory-diagnosis', '재고 진단', '월 평균 판매량을 입력해야 보유기간과 발주량을 계산할 수 있습니다.');
+  } else if (monthsOnHand > targetMonths * 1.5) {
+    setBadge(badge, 'danger', '과다 재고');
+    setDiagnosis('inventory-diagnosis', '재고 진단', '추가 발주를 멈추고 콘텐츠·프로모션·세트 구성 등 소진 계획을 먼저 세우세요.');
+  } else if (onHand <= reorderPoint) {
+    setBadge(badge, 'warning', '발주 검토 시점');
+    setDiagnosis('inventory-diagnosis', '재고 진단', `현재고가 재주문점 이하입니다. 입고 예정 수량을 확인한 뒤 약 ${suggestedOrder.toLocaleString('ko-KR')}개 발주를 검토하세요.`);
+  } else if (monthsOnHand > targetMonths) {
+    setBadge(badge, 'warning', '목표보다 많음');
+    setDiagnosis('inventory-diagnosis', '재고 진단', '품절 위험은 낮지만 목표 보유기간을 초과합니다. 판매 추이를 확인하면서 다음 발주를 늦추세요.');
+  } else {
+    setBadge(badge, 'good', '적정 범위');
+    setDiagnosis('inventory-diagnosis', '재고 진단', '현재 판매 속도와 목표 보유기간 기준으로 비교적 안정적인 재고 수준입니다.');
+  }
+}
+
+const calculators = {
+  'profit-form': calculateProfit,
+  'price-form': calculatePrice,
+  'bep-form': calculateBreakEven,
+  'inventory-form': calculateInventory
+};
+
+Object.entries(calculators).forEach(([formId, calculator]) => {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    calculator();
+  });
+  form.querySelectorAll('input').forEach((input) => input.addEventListener('input', calculator));
+});
+
+document.querySelectorAll('.copy-button').forEach((button) => {
+  button.addEventListener('click', async () => {
+    const target = document.getElementById(button.dataset.copyTarget);
+    if (!target) return;
+    try {
+      await navigator.clipboard.writeText(target.innerText);
+      const toast = document.getElementById('toast');
+      if (toast) {
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1800);
+      }
+    } catch (error) {
+      button.textContent = '복사할 수 없습니다';
+      setTimeout(() => { button.textContent = '결과 복사'; }, 1600);
+    }
+  });
+});
+
+calculateProfit();
+calculatePrice();
+calculateBreakEven();
+calculateInventory();
