@@ -1,27 +1,282 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FashionOps AI - 패션 셀러 계산 도구</title>
-<meta name="description" content="패션 브랜드와 쇼핑몰 운영자를 위한 판매가, 마진, 재고 계산 도구">
-<style>
-body{font-family:Arial,sans-serif;max-width:900px;margin:auto;padding:40px;color:#222}h1{font-size:42px}section{border:1px solid #ddd;border-radius:16px;padding:24px;margin:20px 0}input{padding:10px;margin:5px;width:150px}button{padding:12px;background:#111;color:white;border:0;border-radius:8px;cursor:pointer}.result{margin-top:15px;font-weight:bold}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FashionOps | 패션 셀러 손익·판매가·재고 계산기</title>
+  <meta name="description" content="의류 쇼핑몰과 패션 브랜드 운영자를 위한 무료 판매가, 순이익, 손익분기점, 재고 위험 계산기. 수수료·광고비·반품률까지 반영해 실제 남는 돈을 확인하세요.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="theme-color" content="#0a0d14">
+  <link rel="canonical" href="https://1st-project-3aj.pages.dev/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="FashionOps | 패션 셀러 무료 계산 도구">
+  <meta property="og:description" content="매출이 아니라 실제 남는 돈을 계산하세요. 판매가·순이익·손익분기점·재고 위험을 한곳에서 확인합니다.">
+  <meta property="og:url" content="https://1st-project-3aj.pages.dev/">
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebApplication",
+    "name":"FashionOps",
+    "url":"https://1st-project-3aj.pages.dev/",
+    "applicationCategory":"BusinessApplication",
+    "operatingSystem":"Any",
+    "inLanguage":"ko-KR",
+    "description":"패션 브랜드와 의류 쇼핑몰 운영자를 위한 무료 손익·판매가·재고 계산 도구",
+    "offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"}
+  }
+  </script>
 </head>
 <body>
-<h1>FashionOps AI</h1>
-<p>패션 브랜드와 쇼핑몰 운영자를 위한 무료 손익·재고 분석 도구</p>
-<section>
-<h2>판매가 순이익 계산기</h2>
-<input id="cost" placeholder="원가" value="30000"><input id="price" placeholder="판매가" value="79000"><input id="fee" placeholder="수수료%" value="15"><br>
-<button onclick="calc()">계산하기</button><div class="result" id="r"></div>
-</section>
-<section>
-<h2>제공 예정 기능</h2>
-<ul><li>의류 판매가 계산기</li><li>재고 회전율 계산기</li><li>손익분기점 계산기</li><li>AI 상세페이지 생성기</li></ul>
-</section>
-<div style="height:100px;border:1px dashed #aaa;text-align:center;padding-top:40px">AdSense 광고 영역</div>
-<footer><p><a href="privacy.html">개인정보처리방침</a> | <a href="terms.html">이용약관</a></p></footer>
-<script>function calc(){let c=Number(cost.value),p=Number(price.value),f=Number(fee.value)/100;let x=p-c-(p*f);r.innerHTML='예상 순이익: '+x.toLocaleString()+'원'}</script>
-</body></html>
+  <a class="skip-link" href="#tools">계산기로 바로 이동</a>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="FashionOps 홈">
+        <span class="brand-mark">F</span>
+        <span>FashionOps</span>
+      </a>
+      <nav class="main-nav" aria-label="주요 메뉴">
+        <a href="#tools">계산기</a>
+        <a href="#guide">활용법</a>
+        <a href="#faq">FAQ</a>
+        <a class="nav-cta" href="#profit-calculator">무료 계산</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow"><span class="live-dot"></span> 패션 셀러 무료 운영 도구</span>
+          <h1>매출이 아니라<br><em>실제 남는 돈</em>을 계산하세요.</h1>
+          <p class="hero-description">원가만 빼는 단순 마진 계산에서 벗어나 플랫폼 수수료, 광고비, 배송비와 반품률까지 반영합니다. 숫자를 입력하면 현재 수익 구조와 다음 행동을 바로 확인할 수 있습니다.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#profit-calculator">순이익 계산 시작</a>
+            <a class="button secondary" href="#tool-list">도구 전체 보기</a>
+          </div>
+          <ul class="trust-list" aria-label="서비스 특징">
+            <li>회원가입 없음</li>
+            <li>완전 무료</li>
+            <li>입력값 서버 저장 안 함</li>
+          </ul>
+        </div>
+        <div class="hero-preview" aria-hidden="true">
+          <div class="preview-top">
+            <span>이번 상품 예상 순이익</span>
+            <span class="status-pill good">수익 구조 양호</span>
+          </div>
+          <strong class="preview-profit">23,640원</strong>
+          <div class="preview-chart">
+            <span style="--value:64%"><i>판매원가</i></span>
+            <span style="--value:31%"><i>수수료</i></span>
+            <span style="--value:42%"><i>광고·배송</i></span>
+            <span class="highlight" style="--value:55%"><i>순이익</i></span>
+          </div>
+          <div class="preview-metrics">
+            <div><small>순이익률</small><b>29.9%</b></div>
+            <div><small>손익 ROAS</small><b>335%</b></div>
+            <div><small>권장 판매가</small><b>89,000원</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ad-section" aria-label="광고">
+      <div class="container"><div class="ad-slot"><span>ADVERTISEMENT</span><p>Google AdSense 광고 영역</p></div></div>
+    </section>
+
+    <section class="tool-intro" id="tool-list">
+      <div class="container">
+        <span class="section-kicker">FREE BUSINESS TOOLS</span>
+        <div class="section-heading">
+          <div><h2>운영 숫자를 한 번에 점검하세요</h2><p>각 계산기는 서로 다른 의사결정을 돕습니다. 가장 급한 문제부터 선택하세요.</p></div>
+        </div>
+        <div class="tool-jump-grid">
+          <a href="#profit-calculator"><span class="tool-number">01</span><b>실제 순이익</b><small>수수료·광고·반품 반영</small></a>
+          <a href="#price-calculator"><span class="tool-number">02</span><b>목표 판매가</b><small>원하는 이익에서 가격 역산</small></a>
+          <a href="#bep-calculator"><span class="tool-number">03</span><b>손익분기점</b><small>월 최소 판매량과 매출</small></a>
+          <a href="#inventory-calculator"><span class="tool-number">04</span><b>재고 위험</b><small>보유 개월과 발주 판단</small></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="tools-section" id="tools">
+      <div class="container tools-stack">
+        <article class="calculator-card featured" id="profit-calculator">
+          <div class="calculator-head">
+            <div><span class="calculator-label">MOST USED</span><h2>실제 순이익 계산기</h2><p>판매 1건을 만들었을 때 모든 비용을 제외하고 실제 얼마가 남는지 계산합니다.</p></div>
+            <span class="calculator-icon">₩</span>
+          </div>
+          <div class="calculator-layout">
+            <form class="input-panel" id="profit-form">
+              <div class="field-grid">
+                <label class="field"><span>판매가 <button class="tip" type="button" data-tip="고객이 결제하는 최종 상품 가격입니다.">?</button></span><div class="input-wrap"><input id="profit-price" type="number" min="0" step="1000" value="79000" inputmode="numeric"><i>원</i></div></label>
+                <label class="field"><span>상품 원가</span><div class="input-wrap"><input id="profit-cost" type="number" min="0" step="1000" value="30000" inputmode="numeric"><i>원</i></div></label>
+                <label class="field"><span>포장비</span><div class="input-wrap"><input id="profit-pack" type="number" min="0" step="100" value="1000" inputmode="numeric"><i>원</i></div></label>
+                <label class="field"><span>배송비 부담액</span><div class="input-wrap"><input id="profit-ship" type="number" min="0" step="100" value="3500" inputmode="numeric"><i>원</i></div></label>
+                <label class="field"><span>플랫폼 수수료</span><div class="input-wrap"><input id="profit-platform" type="number" min="0" max="100" step="0.1" value="10" inputmode="decimal"><i>%</i></div></label>
+                <label class="field"><span>결제 수수료</span><div class="input-wrap"><input id="profit-payment" type="number" min="0" max="100" step="0.1" value="3.3" inputmode="decimal"><i>%</i></div></label>
+                <label class="field"><span>광고비 비율 <button class="tip" type="button" data-tip="매출 대비 광고비 비율입니다. 광고비 12만원으로 매출 100만원이면 12%입니다.">?</button></span><div class="input-wrap"><input id="profit-ad" type="number" min="0" max="100" step="0.1" value="12" inputmode="decimal"><i>%</i></div></label>
+                <label class="field"><span>예상 반품률</span><div class="input-wrap"><input id="profit-return" type="number" min="0" max="99" step="0.1" value="8" inputmode="decimal"><i>%</i></div></label>
+                <label class="field field-wide"><span>반품 1건당 추가 손실 <button class="tip" type="button" data-tip="반품 배송비, 검수·재포장 비용, 상품 가치 하락 등을 합친 예상 금액입니다.">?</button></span><div class="input-wrap"><input id="profit-return-loss" type="number" min="0" step="100" value="5000" inputmode="numeric"><i>원</i></div></label>
+              </div>
+              <button class="calculate-button" type="submit"><span>계산 결과 보기</span><b>→</b></button>
+            </form>
+            <div class="result-panel" id="profit-result" aria-live="polite">
+              <span class="result-eyebrow">EXPECTED NET PROFIT</span>
+              <div class="result-main"><small>판매 1건당 예상 순이익</small><strong id="profit-value">0원</strong><span id="profit-badge" class="result-badge">계산 중</span></div>
+              <div class="metric-grid">
+                <div><small>실질 순이익률</small><b id="profit-margin">0%</b></div>
+                <div><small>예상 매출원가율</small><b id="profit-cost-rate">0%</b></div>
+                <div><small>광고 손익분기 ROAS</small><b id="profit-roas">-</b></div>
+              </div>
+              <div class="diagnosis" id="profit-diagnosis"><span>진단</span><p>값을 입력하면 수익 구조를 분석해 드립니다.</p></div>
+              <div class="cost-breakdown" id="profit-breakdown"></div>
+              <button class="copy-button" type="button" data-copy-target="profit-result">결과 복사</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="calculator-card" id="price-calculator">
+          <div class="calculator-head">
+            <div><span class="calculator-label">PRICING</span><h2>목표 판매가 역산</h2><p>원하는 순이익을 남기려면 최소 얼마에 판매해야 하는지 계산합니다.</p></div>
+            <span class="calculator-icon">↗</span>
+          </div>
+          <div class="calculator-layout">
+            <form class="input-panel" id="price-form">
+              <div class="field-grid">
+                <label class="field"><span>상품 원가</span><div class="input-wrap"><input id="price-cost" type="number" min="0" step="1000" value="30000"><i>원</i></div></label>
+                <label class="field"><span>포장·배송비</span><div class="input-wrap"><input id="price-extra" type="number" min="0" step="100" value="4500"><i>원</i></div></label>
+                <label class="field"><span>수수료 합계</span><div class="input-wrap"><input id="price-fee" type="number" min="0" max="99" step="0.1" value="13.3"><i>%</i></div></label>
+                <label class="field"><span>광고비 비율</span><div class="input-wrap"><input id="price-ad" type="number" min="0" max="99" step="0.1" value="12"><i>%</i></div></label>
+                <label class="field"><span>예상 반품률</span><div class="input-wrap"><input id="price-return" type="number" min="0" max="99" step="0.1" value="8"><i>%</i></div></label>
+                <label class="field"><span>목표 순이익</span><div class="input-wrap"><input id="price-target" type="number" min="0" step="1000" value="20000"><i>원</i></div></label>
+              </div>
+              <button class="calculate-button" type="submit"><span>권장 판매가 계산</span><b>→</b></button>
+            </form>
+            <div class="result-panel compact" id="price-result" aria-live="polite">
+              <span class="result-eyebrow">RECOMMENDED PRICE</span>
+              <div class="result-main"><small>목표 이익을 위한 권장 최소 판매가</small><strong id="price-value">0원</strong><span class="result-badge neutral">1,000원 단위 올림</span></div>
+              <div class="metric-grid two">
+                <div><small>예상 순이익</small><b id="price-profit">0원</b></div>
+                <div><small>예상 순이익률</small><b id="price-margin">0%</b></div>
+              </div>
+              <div class="diagnosis" id="price-diagnosis"><span>가격 팁</span><p>가격을 계산하고 시장 가격대와 비교해 보세요.</p></div>
+              <button class="copy-button" type="button" data-copy-target="price-result">결과 복사</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="calculator-card" id="bep-calculator">
+          <div class="calculator-head">
+            <div><span class="calculator-label">BREAK-EVEN</span><h2>손익분기점 계산기</h2><p>매달 적자를 피하기 위해 필요한 최소 판매량과 매출 목표를 확인합니다.</p></div>
+            <span class="calculator-icon">◎</span>
+          </div>
+          <div class="calculator-layout">
+            <form class="input-panel" id="bep-form">
+              <div class="field-grid">
+                <label class="field"><span>월 고정비</span><div class="input-wrap"><input id="bep-fixed" type="number" min="0" step="10000" value="5000000"><i>원</i></div></label>
+                <label class="field"><span>평균 판매가</span><div class="input-wrap"><input id="bep-price" type="number" min="0" step="1000" value="79000"><i>원</i></div></label>
+                <label class="field"><span>건당 변동비</span><div class="input-wrap"><input id="bep-variable" type="number" min="0" step="1000" value="49000"><i>원</i></div></label>
+                <label class="field"><span>월 영업일</span><div class="input-wrap"><input id="bep-days" type="number" min="1" max="31" step="1" value="30"><i>일</i></div></label>
+              </div>
+              <button class="calculate-button" type="submit"><span>손익분기점 계산</span><b>→</b></button>
+            </form>
+            <div class="result-panel compact" id="bep-result" aria-live="polite">
+              <span class="result-eyebrow">MONTHLY BREAK-EVEN</span>
+              <div class="result-main"><small>월 최소 판매량</small><strong id="bep-units">0개</strong><span id="bep-badge" class="result-badge neutral">목표 수량</span></div>
+              <div class="metric-grid two">
+                <div><small>월 최소 매출</small><b id="bep-sales">0원</b></div>
+                <div><small>하루 평균 판매량</small><b id="bep-daily">0개</b></div>
+              </div>
+              <div class="diagnosis" id="bep-diagnosis"><span>운영 팁</span><p>현재 월 판매량과 비교하면 목표의 현실성을 판단할 수 있습니다.</p></div>
+              <button class="copy-button" type="button" data-copy-target="bep-result">결과 복사</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="calculator-card" id="inventory-calculator">
+          <div class="calculator-head">
+            <div><span class="calculator-label">INVENTORY</span><h2>재고 위험·발주 계산기</h2><p>현재 판매 속도에서 재고가 몇 개월치인지, 지금 발주가 필요한지 진단합니다.</p></div>
+            <span class="calculator-icon">▦</span>
+          </div>
+          <div class="calculator-layout">
+            <form class="input-panel" id="inventory-form">
+              <div class="field-grid">
+                <label class="field"><span>현재 판매 가능 재고</span><div class="input-wrap"><input id="inventory-stock" type="number" min="0" step="1" value="500"><i>개</i></div></label>
+                <label class="field"><span>월 평균 판매량</span><div class="input-wrap"><input id="inventory-sales" type="number" min="0" step="1" value="100"><i>개</i></div></label>
+                <label class="field"><span>입고 예정 수량</span><div class="input-wrap"><input id="inventory-incoming" type="number" min="0" step="1" value="0"><i>개</i></div></label>
+                <label class="field"><span>발주 리드타임</span><div class="input-wrap"><input id="inventory-lead" type="number" min="0" step="1" value="4"><i>주</i></div></label>
+                <label class="field"><span>안전재고</span><div class="input-wrap"><input id="inventory-safety" type="number" min="0" step="1" value="50"><i>개</i></div></label>
+                <label class="field"><span>목표 보유기간</span><div class="input-wrap"><input id="inventory-target" type="number" min="0.5" step="0.5" value="3"><i>개월</i></div></label>
+              </div>
+              <button class="calculate-button" type="submit"><span>재고 상태 진단</span><b>→</b></button>
+            </form>
+            <div class="result-panel compact" id="inventory-result" aria-live="polite">
+              <span class="result-eyebrow">INVENTORY HEALTH</span>
+              <div class="result-main"><small>예상 재고 보유기간</small><strong id="inventory-months">0개월</strong><span id="inventory-badge" class="result-badge">계산 중</span></div>
+              <div class="metric-grid two">
+                <div><small>재주문점</small><b id="inventory-rop">0개</b></div>
+                <div><small>현재 발주 제안</small><b id="inventory-order">0개</b></div>
+              </div>
+              <div class="diagnosis" id="inventory-diagnosis"><span>재고 진단</span><p>판매 속도와 목표 보유기간을 기준으로 분석합니다.</p></div>
+              <button class="copy-button" type="button" data-copy-target="inventory-result">결과 복사</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="ad-section second" aria-label="광고">
+      <div class="container"><div class="ad-slot"><span>ADVERTISEMENT</span><p>Google AdSense 광고 영역</p></div></div>
+    </section>
+
+    <section class="guide-section" id="guide">
+      <div class="container">
+        <span class="section-kicker">HOW TO USE</span>
+        <div class="section-heading"><div><h2>계산 결과를 실제 운영에 쓰는 법</h2><p>숫자는 정답이 아니라 의사결정을 돕는 신호입니다.</p></div></div>
+        <div class="guide-grid">
+          <article><span>01</span><h3>순이익률부터 확인</h3><p>매출이 늘어도 순이익률이 낮으면 광고 확대가 오히려 손실을 키울 수 있습니다. 가격, 원가, 수수료 중 조정 가능한 항목을 먼저 찾으세요.</p></article>
+          <article><span>02</span><h3>손익분기점과 현재 판매량 비교</h3><p>필요 판매량이 현재 실적보다 지나치게 높다면 무리한 매출 목표보다 고정비와 건당 변동비를 줄이는 편이 효과적입니다.</p></article>
+          <article><span>03</span><h3>재고는 판매 속도로 판단</h3><p>재고 수량 자체보다 몇 개월 동안 팔 수 있는 물량인지가 중요합니다. 목표 보유기간을 넘기면 추가 생산보다 소진 계획을 우선하세요.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq-section" id="faq">
+      <div class="container faq-layout">
+        <div class="faq-title"><span class="section-kicker">FAQ</span><h2>자주 묻는 질문</h2><p>계산값을 해석할 때 필요한 기준을 모았습니다.</p></div>
+        <div class="faq-list">
+          <details open><summary>계산 결과는 회계상 실제 이익과 같나요?</summary><p>아닙니다. 이 도구는 빠른 사업 판단을 위한 추정 계산기입니다. 부가세, 소득세, 인건비 배부, 환불 정책과 플랫폼별 정산 규칙에 따라 실제 금액은 달라질 수 있습니다.</p></details>
+          <details><summary>광고비 비율은 어떻게 입력하나요?</summary><p>같은 기간의 광고비를 광고를 통해 발생한 매출로 나눈 값이 아니라, 전체 상품 매출 대비 광고비 비율을 입력하는 방식입니다. 광고비 120만원, 상품 매출 1,000만원이면 12%입니다.</p></details>
+          <details><summary>반품 상품이 다시 판매 가능해도 반품률을 넣어야 하나요?</summary><p>네. 최초 배송비, 반품 배송비, 검수와 재포장 비용이 생길 수 있습니다. 다시 판매 가능한 경우에는 ‘반품 1건당 추가 손실’을 실제 예상 비용에 가깝게 낮춰 입력하세요.</p></details>
+          <details><summary>입력한 사업 데이터가 저장되나요?</summary><p>현재 버전의 계산은 사용자의 브라우저에서만 실행되며 입력값을 별도 서버로 전송하거나 저장하지 않습니다.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <div class="container cta-box">
+        <div><span class="section-kicker">BETTER DECISIONS</span><h2>감이 아니라 숫자로 브랜드를 운영하세요.</h2><p>계산기는 계속 개선됩니다. 오류 제보나 필요한 기능이 있다면 의견을 보내주세요.</p></div>
+        <a class="button light" href="contact.html">의견 보내기</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div><a class="brand footer-brand" href="index.html"><span class="brand-mark">F</span><span>FashionOps</span></a><p>패션 브랜드와 의류 쇼핑몰 운영자를 위한 무료 비즈니스 계산 도구입니다.</p></div>
+      <div class="footer-links"><div><b>서비스</b><a href="#tools">계산기</a><a href="#guide">활용법</a><a href="#faq">FAQ</a></div><div><b>정보</b><a href="about.html">서비스 소개</a><a href="contact.html">문의</a><a href="privacy.html">개인정보처리방침</a><a href="terms.html">이용약관</a></div></div>
+    </div>
+    <div class="container footer-bottom"><span>© 2026 FashionOps. All rights reserved.</span><span>계산 결과는 참고용이며 전문 회계·세무 자문을 대체하지 않습니다.</span></div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">결과를 복사했습니다.</div>
+  <script src="app.js" defer></script>
+</body>
+</html>
