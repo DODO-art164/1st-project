@@ -13,5 +13,9 @@
 /*.js
   Cache-Control: public, max-age=0, must-revalidate
 
+/*.csv
+  Content-Type: text/csv; charset=utf-8
+  Cache-Control: public, max-age=0, must-revalidate
+
 /*.svg
   Cache-Control: public, max-age=604800, immutable
