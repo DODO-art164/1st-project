@@ -35,6 +35,19 @@ function calculateProfit() {
   const adRate = safeRate(numberValue('profit-ad'));
   const returnRate = safeRate(numberValue('profit-return'));
   const returnLoss = numberValue('profit-return-loss');
+  const badge = document.getElementById('profit-badge');
+  const breakdown = document.getElementById('profit-breakdown');
+
+  if (price <= 0) {
+    setText('profit-value', '-');
+    setText('profit-margin', '-');
+    setText('profit-cost-rate', '-');
+    setText('profit-roas', '-');
+    setBadge(badge, 'neutral', '판매가 입력 필요');
+    setDiagnosis('profit-diagnosis', '입력 필요', '고객이 결제하는 판매가를 입력하면 예상 순이익을 계산합니다.');
+    if (breakdown) breakdown.innerHTML = '';
+    return;
+  }
 
   const keptRate = 1 - returnRate;
   const expectedRevenue = price * keptRate;
@@ -43,8 +56,8 @@ function calculateProfit() {
   const expectedAdCost = price * adRate;
   const expectedReturnLoss = returnRate * returnLoss;
   const expectedProfit = expectedRevenue - expectedProductCost - packaging - shipping - expectedFees - expectedAdCost - expectedReturnLoss;
-  const margin = price > 0 ? expectedProfit / price * 100 : 0;
-  const costRate = price > 0 ? expectedProductCost / price * 100 : 0;
+  const margin = expectedProfit / price * 100;
+  const costRate = expectedProductCost / price * 100;
   const contributionBeforeAds = expectedProfit + expectedAdCost;
   const breakEvenRoas = contributionBeforeAds > 0 ? expectedRevenue / contributionBeforeAds * 100 : 0;
 
@@ -53,7 +66,6 @@ function calculateProfit() {
   setText('profit-cost-rate', percent(costRate));
   setText('profit-roas', breakEvenRoas > 0 ? `${Math.ceil(breakEvenRoas)}%` : '달성 불가');
 
-  const badge = document.getElementById('profit-badge');
   if (expectedProfit < 0) {
     setBadge(badge, 'danger', '판매할수록 손실');
     setDiagnosis('profit-diagnosis', '먼저 할 일', `판매 1건당 약 ${money(Math.abs(expectedProfit))}의 손실이 예상됩니다. 광고를 늘리기 전에 판매가·원가·수수료부터 조정하세요.`);
@@ -68,7 +80,6 @@ function calculateProfit() {
     setDiagnosis('profit-diagnosis', '다음 확인', '현재 입력값에서는 비교적 안정적입니다. 실제 정산서의 광고비와 반품률로 매월 다시 확인하세요.');
   }
 
-  const breakdown = document.getElementById('profit-breakdown');
   if (breakdown) {
     const rows = [
       ['상품 원가', expectedProductCost],
@@ -78,11 +89,10 @@ function calculateProfit() {
       ['반품 손실', expectedReturnLoss],
       ['순이익', expectedProfit]
     ];
-    const denominator = Math.max(price, 1);
     breakdown.innerHTML = rows.map(([label, value]) => `
       <div class="breakdown-row ${label === '순이익' ? 'profit' : ''}">
         <span>${label}</span>
-        <div class="breakdown-track"><i style="width:${Math.min(Math.abs(value / denominator) * 100, 100)}%"></i></div>
+        <div class="breakdown-track"><i style="width:${Math.min(Math.abs(value / price) * 100, 100)}%"></i></div>
         <b>${money(value)}</b>
       </div>`).join('');
   }
@@ -129,13 +139,16 @@ function calculateBreakEven() {
   const units = contribution > 0 ? Math.ceil(fixedCost / contribution) : 0;
   const sales = units * averagePrice;
   const dailyUnits = units / operatingDays;
+  const badge = document.getElementById('bep-badge');
 
   setText('bep-units', contribution > 0 ? `${units.toLocaleString('ko-KR')}개` : '계산 불가');
-  setText('bep-sales', money(sales));
+  setText('bep-sales', contribution > 0 ? money(sales) : '-');
   setText('bep-daily', contribution > 0 ? `${dailyUnits.toFixed(1)}개` : '-');
 
-  const badge = document.getElementById('bep-badge');
-  if (contribution <= 0) {
+  if (averagePrice <= 0) {
+    setBadge(badge, 'neutral', '판매가 입력 필요');
+    setDiagnosis('bep-diagnosis', '입력 필요', '평균 판매가를 입력하면 월 손익분기 판매량을 계산합니다.');
+  } else if (contribution <= 0) {
     setBadge(badge, 'danger', '건당 손실 구조');
     setDiagnosis('bep-diagnosis', '먼저 할 일', '평균 판매가가 건당 변동비보다 낮거나 같습니다. 판매량을 늘려도 고정비를 회수할 수 없습니다.');
   } else if (dailyUnits >= 20) {
@@ -160,12 +173,12 @@ function calculateInventory() {
   const reorderPoint = Math.ceil(dailySales * leadWeeks * 7 + safetyStock);
   const targetStock = Math.ceil(monthlySales * targetMonths + safetyStock);
   const suggestedOrder = Math.max(targetStock - totalAvailable, 0);
+  const badge = document.getElementById('inventory-badge');
 
   setText('inventory-months', monthlySales > 0 ? `${monthsOnHand.toFixed(1)}개월` : '판매량 필요');
-  setText('inventory-rop', `${reorderPoint.toLocaleString('ko-KR')}개`);
-  setText('inventory-order', `${suggestedOrder.toLocaleString('ko-KR')}개`);
+  setText('inventory-rop', monthlySales > 0 ? `${reorderPoint.toLocaleString('ko-KR')}개` : '-');
+  setText('inventory-order', monthlySales > 0 ? `${suggestedOrder.toLocaleString('ko-KR')}개` : '-');
 
-  const badge = document.getElementById('inventory-badge');
   if (monthlySales <= 0) {
     setBadge(badge, 'neutral', '판매 데이터 필요');
     setDiagnosis('inventory-diagnosis', '입력 필요', '최근 30일 판매량을 입력해야 재고 보유기간과 발주량을 계산할 수 있습니다.');
@@ -185,10 +198,10 @@ function calculateInventory() {
 }
 
 const calculators = {
-  profit: { formId: 'profit-form', panelId: 'profit-calculator', calculate: calculateProfit },
-  price: { formId: 'price-form', panelId: 'price-calculator', calculate: calculatePrice },
-  bep: { formId: 'bep-form', panelId: 'bep-calculator', calculate: calculateBreakEven },
-  inventory: { formId: 'inventory-form', panelId: 'inventory-calculator', calculate: calculateInventory }
+  profit: { formId: 'profit-form', panelId: 'profit-calculator', resultId: 'profit-result', calculate: calculateProfit },
+  price: { formId: 'price-form', panelId: 'price-calculator', resultId: 'price-result', calculate: calculatePrice },
+  bep: { formId: 'bep-form', panelId: 'bep-calculator', resultId: 'bep-result', calculate: calculateBreakEven },
+  inventory: { formId: 'inventory-form', panelId: 'inventory-calculator', resultId: 'inventory-result', calculate: calculateInventory }
 };
 
 const storageKey = 'fashionops-main-calculator-values-v2';
@@ -211,17 +224,26 @@ function saveCalculatorInputs() {
   } catch (error) {}
 }
 
-Object.values(calculators).forEach(({ formId, calculate }) => {
+function scrollToResult(resultId) {
+  if (!window.matchMedia('(max-width: 900px)').matches) return;
+  requestAnimationFrame(() => {
+    document.getElementById(resultId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+Object.entries(calculators).forEach(([key, { formId, resultId, calculate }]) => {
   const form = document.getElementById(formId);
   if (!form) return;
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     calculate();
+    scrollToResult(resultId);
   });
 
   form.querySelectorAll('input[id]').forEach((input) => {
     input.addEventListener('input', () => {
+      input.setAttribute('aria-invalid', String(!input.validity.valid));
       calculate();
       saveCalculatorInputs();
     });
@@ -232,11 +254,12 @@ Object.values(calculators).forEach(({ formId, calculate }) => {
     const resetButton = document.createElement('button');
     resetButton.type = 'button';
     resetButton.className = 'copy-button';
-    resetButton.dataset.resetForm = formId;
+    resetButton.dataset.resetForm = key;
     resetButton.textContent = '입력값 초기화';
     resetButton.addEventListener('click', () => {
       form.querySelectorAll('input[id]').forEach((input) => {
         input.value = defaultValues[input.id] ?? input.defaultValue;
+        input.removeAttribute('aria-invalid');
       });
       saveCalculatorInputs();
       calculate();
@@ -247,14 +270,21 @@ Object.values(calculators).forEach(({ formId, calculate }) => {
 
 function activateCalculator(key, updateUrl = false) {
   const selected = calculators[key] || calculators.profit;
+
   document.querySelectorAll('[data-calculator-panel]').forEach((panel) => {
     panel.hidden = panel.id !== selected.panelId;
   });
-  document.querySelectorAll('[data-calculator-tab]').forEach((tab) => {
+
+  document.querySelectorAll('[data-calculator-tab]').forEach((tab, index) => {
+    if (!tab.id) tab.id = `calculator-tab-${tab.dataset.calculatorTab || index}`;
     const active = tab.dataset.calculatorTab === key;
     tab.setAttribute('aria-selected', String(active));
     tab.tabIndex = active ? 0 : -1;
+    const panel = document.getElementById(tab.getAttribute('aria-controls'));
+    if (panel) panel.setAttribute('aria-labelledby', tab.id);
+    if (active) tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   });
+
   selected.calculate();
   if (updateUrl) history.replaceState(null, '', `#${selected.panelId}`);
 }
@@ -266,11 +296,16 @@ activateCalculator(initialKey);
 document.querySelectorAll('[data-calculator-tab]').forEach((tab) => {
   tab.addEventListener('click', () => activateCalculator(tab.dataset.calculatorTab, true));
   tab.addEventListener('keydown', (event) => {
-    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
     const tabs = [...document.querySelectorAll('[data-calculator-tab]')];
     const currentIndex = tabs.indexOf(tab);
-    const direction = event.key === 'ArrowRight' ? 1 : -1;
-    const next = tabs[(currentIndex + direction + tabs.length) % tabs.length];
+    let nextIndex = currentIndex;
+    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+    if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    if (event.key === 'Home') nextIndex = 0;
+    if (event.key === 'End') nextIndex = tabs.length - 1;
+    const next = tabs[nextIndex];
     next.focus();
     activateCalculator(next.dataset.calculatorTab, true);
   });
@@ -289,11 +324,10 @@ document.querySelectorAll('.copy-button[data-copy-target]').forEach((button) => 
     try {
       await navigator.clipboard.writeText(target.innerText);
       button.textContent = '복사 완료';
-      setTimeout(() => { button.textContent = original; }, 1400);
     } catch (error) {
       button.textContent = '복사 실패';
-      setTimeout(() => { button.textContent = original; }, 1400);
     }
+    setTimeout(() => { button.textContent = original; }, 1400);
   });
 });
 
