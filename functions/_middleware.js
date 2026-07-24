@@ -1,7 +1,8 @@
 const ADSENSE_SCRIPT = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249" crossorigin="anonymous"></script>';
 const ADSENSE_META = '<meta name="google-adsense-account" content="ca-pub-1158392779506249">';
-const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=2">';
-const GLOBAL_CURRENCY = '<script src="/currency.js?v=2"></script>';
+const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=3">';
+const GLOBAL_CURRENCY = '<script src="/currency.js?v=3"></script>';
+const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=1" defer></script>';
 
 export async function onRequest(context) {
   const response = await context.next();
@@ -23,6 +24,9 @@ export async function onRequest(context) {
     }
     if (!html.includes('/currency.js')) {
       tags.push(GLOBAL_CURRENCY);
+    }
+    if (!html.includes('/global-ux.js')) {
+      tags.push(GLOBAL_UX_SCRIPT);
     }
     if (tags.length) html = html.replace('</head>', `  ${tags.join('\n  ')}\n</head>`);
   }
