@@ -1,4 +1,4 @@
 FashionOps full quality audit trigger
 Date: 2026-07-25
-Revision: 7
-Scope: webfont mobile navigation methodology about privacy links SEO service worker AdSense readiness
+Revision: 8
+Scope: community UI D1 API Pages Functions moderation security privacy terms UGC SEO cache AdSense and existing site quality
