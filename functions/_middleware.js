@@ -1,6 +1,9 @@
 const ADSENSE_SCRIPT = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249" crossorigin="anonymous"></script>';
 const ADSENSE_META = '<meta name="google-adsense-account" content="ca-pub-1158392779506249">';
-const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=5">';
+const FONT_PRECONNECT = '<link rel="preconnect" href="https://fonts.googleapis.com">';
+const FONT_STATIC_PRECONNECT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
+const FONT_STYLESHEET = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">';
+const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=6">';
 const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=3" defer></script>';
 const GLOBAL_CURRENCY = '<script src="/currency.js?v=4"></script>';
 const BULK_IMPORT_SCRIPT = '<script src="/bulk-import.js?v=1" defer></script>';
@@ -99,6 +102,9 @@ export async function onRequest(context) {
   let html = await response.text();
   if (html.includes('</head>')) {
     const tags = metadataFor(html, pathname, isErrorResponse);
+    if (!html.includes('fonts.googleapis.com/css2?family=Noto+Sans+KR')) {
+      tags.push(FONT_PRECONNECT, FONT_STATIC_PRECONNECT, FONT_STYLESHEET);
+    }
     if (shouldInjectAds && !html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249')) tags.push(ADSENSE_SCRIPT);
     if (shouldInjectAds && !html.includes('name="google-adsense-account"')) tags.push(ADSENSE_META);
     if (!html.includes('/global-ux.css')) tags.push(GLOBAL_UX);
