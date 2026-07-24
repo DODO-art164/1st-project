@@ -1,7 +1,7 @@
 const ADSENSE_SCRIPT = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249" crossorigin="anonymous"></script>';
 const ADSENSE_META = '<meta name="google-adsense-account" content="ca-pub-1158392779506249">';
-const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css">';
-const GLOBAL_CURRENCY = '<script src="/currency.js"></script>';
+const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=2">';
+const GLOBAL_CURRENCY = '<script src="/currency.js?v=2"></script>';
 
 export async function onRequest(context) {
   const response = await context.next();
