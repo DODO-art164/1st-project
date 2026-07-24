@@ -154,6 +154,6 @@ export async function onRequest(context) {
 </body>`;
 
   return new Response(pageShell({ title, descriptionText, canonical, body, schema }), {
-    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=30, s-maxage=120' }
+    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }
   });
 }
