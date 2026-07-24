@@ -1,412 +1,458 @@
-const money = (value) => window.FashionOpsCurrency?.format?.(value)
-  || `${Math.round(value).toLocaleString('ko-KR')}원`;
-const percent = (value) => `${Number.isFinite(value) ? value.toFixed(1) : '0.0'}%`;
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const tools = document.getElementById('tools');
 
-function numberValue(id) {
-  const element = document.getElementById(id);
-  return element ? Math.max(Number(element.value) || 0, 0) : 0;
-}
+if (tools) {
+  const money = (value) => window.FashionOpsCurrency?.format?.(value)
+    || `${Math.round(value).toLocaleString('ko-KR')}원`;
+  const percent = (value) => `${Number.isFinite(value) ? value.toFixed(1) : '0.0'}%`;
 
-function safeRate(value) {
-  return Math.min(Math.max(value / 100, 0), 0.99);
-}
+  const numberValue = (id) => {
+    const element = document.getElementById(id);
+    return element ? Math.max(Number(element.value) || 0, 0) : 0;
+  };
 
-function currentCurrency() {
-  return window.FashionOpsCurrency?.getCurrency?.() || 'KRW';
-}
+  const safeRate = (value) => Math.min(Math.max(value / 100, 0), 0.99);
+  const currentCurrency = () => window.FashionOpsCurrency?.getCurrency?.() || 'KRW';
 
-function priceRoundingIncrement() {
-  if (currentCurrency() === 'KRW') return 1000;
-  if (currentCurrency() === 'JPY') return 100;
-  return 0.01;
-}
+  const priceRoundingIncrement = () => {
+    if (currentCurrency() === 'KRW') return 1000;
+    if (currentCurrency() === 'JPY') return 100;
+    return 0.01;
+  };
 
-function roundRecommendedPrice(value) {
-  const increment = priceRoundingIncrement();
-  return Math.ceil((value - Number.EPSILON) / increment) * increment;
-}
+  const roundRecommendedPrice = (value) => {
+    const increment = priceRoundingIncrement();
+    return Math.ceil((value - Number.EPSILON) / increment) * increment;
+  };
 
-function updatePriceRoundingLabel() {
-  const badge = document.querySelector('#price-result .result-badge');
-  if (!badge) return;
-  if (currentCurrency() === 'KRW') badge.textContent = '1,000 KRW 단위 올림';
-  else if (currentCurrency() === 'JPY') badge.textContent = '100 JPY 단위 올림';
-  else badge.textContent = `0.01 ${currentCurrency()} 단위 올림`;
-}
+  const setText = (id, value) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  };
 
-function setText(id, value) {
-  const element = document.getElementById(id);
-  if (element) element.textContent = value;
-}
+  const setBadge = (element, type, text) => {
+    if (!element) return;
+    element.className = `result-badge ${type}`;
+    element.textContent = text;
+  };
 
-function setBadge(element, type, text) {
-  if (!element) return;
-  element.className = `result-badge ${type}`;
-  element.textContent = text;
-}
+  const setDiagnosis = (id, label, text) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    const heading = document.createElement('span');
+    const paragraph = document.createElement('p');
+    heading.textContent = label;
+    paragraph.textContent = text;
+    element.replaceChildren(heading, paragraph);
+  };
 
-function setDiagnosis(id, label, text) {
-  const element = document.getElementById(id);
-  if (element) element.innerHTML = `<span>${label}</span><p>${text}</p>`;
-}
-
-function calculateProfit() {
-  const price = numberValue('profit-price');
-  const cost = numberValue('profit-cost');
-  const packaging = numberValue('profit-pack');
-  const shipping = numberValue('profit-ship');
-  const feeRate = safeRate(numberValue('profit-platform') + numberValue('profit-payment'));
-  const adRate = safeRate(numberValue('profit-ad'));
-  const returnRate = safeRate(numberValue('profit-return'));
-  const returnLoss = numberValue('profit-return-loss');
-  const badge = document.getElementById('profit-badge');
-  const breakdown = document.getElementById('profit-breakdown');
-
-  if (price <= 0) {
-    setText('profit-value', '-');
-    setText('profit-margin', '-');
-    setText('profit-cost-rate', '-');
-    setText('profit-roas', '-');
-    setBadge(badge, 'neutral', '판매가 입력 필요');
-    setDiagnosis('profit-diagnosis', '입력 필요', '고객이 결제하는 판매가를 입력하면 예상 순이익을 계산합니다.');
-    if (breakdown) breakdown.innerHTML = '';
-    return;
+  function updatePriceRoundingLabel() {
+    const badge = document.querySelector('#price-result .result-badge');
+    if (!badge) return;
+    if (currentCurrency() === 'KRW') badge.textContent = '1,000 KRW 단위 올림';
+    else if (currentCurrency() === 'JPY') badge.textContent = '100 JPY 단위 올림';
+    else badge.textContent = `0.01 ${currentCurrency()} 단위 올림`;
   }
 
-  const keptRate = 1 - returnRate;
-  const expectedRevenue = price * keptRate;
-  const expectedProductCost = cost * keptRate;
-  const expectedFees = expectedRevenue * feeRate;
-  const expectedAdCost = price * adRate;
-  const expectedReturnLoss = returnRate * returnLoss;
-  const expectedProfit = expectedRevenue - expectedProductCost - packaging - shipping - expectedFees - expectedAdCost - expectedReturnLoss;
-  const margin = expectedProfit / price * 100;
-  const costRate = expectedProductCost / price * 100;
-  const contributionBeforeAds = expectedProfit + expectedAdCost;
-  const breakEvenRoas = contributionBeforeAds > 0 ? expectedRevenue / contributionBeforeAds * 100 : 0;
+  function renderBreakdown(rows, price) {
+    const breakdown = document.getElementById('profit-breakdown');
+    if (!breakdown) return;
+    const fragment = document.createDocumentFragment();
 
-  setText('profit-value', money(expectedProfit));
-  setText('profit-margin', percent(margin));
-  setText('profit-cost-rate', percent(costRate));
-  setText('profit-roas', breakEvenRoas > 0 ? `${Math.ceil(breakEvenRoas)}%` : '달성 불가');
+    rows.forEach(([label, value]) => {
+      const row = document.createElement('div');
+      row.className = `breakdown-row${label === '순이익' ? ' profit' : ''}`;
 
-  if (expectedProfit < 0) {
-    setBadge(badge, 'danger', '판매할수록 손실');
-    setDiagnosis('profit-diagnosis', '먼저 할 일', `판매 1건당 약 ${money(Math.abs(expectedProfit))}의 손실이 예상됩니다. 광고를 늘리기 전에 판매가·원가·수수료부터 조정하세요.`);
-  } else if (margin < 10) {
-    setBadge(badge, 'danger', '이익 여유 부족');
-    setDiagnosis('profit-diagnosis', '먼저 할 일', '할인이나 반품률이 조금만 높아져도 적자로 바뀔 수 있습니다. 판매가 인상 또는 원가 절감을 우선 검토하세요.');
-  } else if (margin < 25) {
-    setBadge(badge, 'warning', '개선 여지 있음');
-    setDiagnosis('profit-diagnosis', '다음 확인', '기본 이익은 남지만 광고비와 할인 폭을 키우기 전에 조건을 바꿔가며 다시 계산해 보세요.');
-  } else {
-    setBadge(badge, 'good', '수익 구조 양호');
-    setDiagnosis('profit-diagnosis', '다음 확인', '현재 입력값에서는 비교적 안정적입니다. 실제 정산서의 광고비와 반품률로 매월 다시 확인하세요.');
+      const name = document.createElement('span');
+      name.textContent = label;
+
+      const track = document.createElement('div');
+      track.className = 'breakdown-track';
+      const fill = document.createElement('i');
+      fill.style.width = `${Math.min(Math.abs(value / price) * 100, 100)}%`;
+      track.appendChild(fill);
+
+      const amount = document.createElement('b');
+      amount.textContent = money(value);
+
+      row.append(name, track, amount);
+      fragment.appendChild(row);
+    });
+
+    breakdown.replaceChildren(fragment);
   }
 
-  if (breakdown) {
-    const rows = [
+  function calculateProfit() {
+    const price = numberValue('profit-price');
+    const cost = numberValue('profit-cost');
+    const packaging = numberValue('profit-pack');
+    const shipping = numberValue('profit-ship');
+    const feeRate = safeRate(numberValue('profit-platform') + numberValue('profit-payment'));
+    const adRate = safeRate(numberValue('profit-ad'));
+    const returnRate = safeRate(numberValue('profit-return'));
+    const returnLoss = numberValue('profit-return-loss');
+    const badge = document.getElementById('profit-badge');
+    const breakdown = document.getElementById('profit-breakdown');
+
+    if (price <= 0) {
+      ['profit-value', 'profit-margin', 'profit-cost-rate', 'profit-roas'].forEach((id) => setText(id, '-'));
+      setBadge(badge, 'neutral', '판매가 입력 필요');
+      setDiagnosis('profit-diagnosis', '입력 필요', '고객이 결제하는 판매가를 입력하면 예상 순이익을 계산합니다.');
+      breakdown?.replaceChildren();
+      return;
+    }
+
+    const keptRate = 1 - returnRate;
+    const expectedRevenue = price * keptRate;
+    const expectedProductCost = cost * keptRate;
+    const expectedFees = expectedRevenue * feeRate;
+    const expectedAdCost = price * adRate;
+    const expectedReturnLoss = returnRate * returnLoss;
+    const expectedProfit = expectedRevenue - expectedProductCost - packaging - shipping
+      - expectedFees - expectedAdCost - expectedReturnLoss;
+    const margin = expectedProfit / price * 100;
+    const costRate = expectedProductCost / price * 100;
+    const contributionBeforeAds = expectedProfit + expectedAdCost;
+    const breakEvenRoas = contributionBeforeAds > 0
+      ? expectedRevenue / contributionBeforeAds * 100
+      : 0;
+
+    setText('profit-value', money(expectedProfit));
+    setText('profit-margin', percent(margin));
+    setText('profit-cost-rate', percent(costRate));
+    setText('profit-roas', breakEvenRoas > 0 ? `${Math.ceil(breakEvenRoas)}%` : '달성 불가');
+
+    if (expectedProfit < 0) {
+      setBadge(badge, 'danger', '판매할수록 손실');
+      setDiagnosis('profit-diagnosis', '먼저 할 일', `판매 1건당 약 ${money(Math.abs(expectedProfit))}의 손실이 예상됩니다. 광고를 늘리기 전에 판매가·원가·수수료부터 조정하세요.`);
+    } else if (margin < 10) {
+      setBadge(badge, 'danger', '이익 여유 부족');
+      setDiagnosis('profit-diagnosis', '먼저 할 일', '할인이나 반품률이 조금만 높아져도 적자로 바뀔 수 있습니다. 판매가 인상 또는 원가 절감을 우선 검토하세요.');
+    } else if (margin < 25) {
+      setBadge(badge, 'warning', '개선 여지 있음');
+      setDiagnosis('profit-diagnosis', '다음 확인', '기본 이익은 남지만 광고비와 할인 폭을 키우기 전에 조건을 바꿔가며 다시 계산해 보세요.');
+    } else {
+      setBadge(badge, 'good', '수익 구조 양호');
+      setDiagnosis('profit-diagnosis', '다음 확인', '현재 입력값에서는 비교적 안정적입니다. 실제 정산서의 광고비와 반품률로 매월 다시 확인하세요.');
+    }
+
+    renderBreakdown([
       ['상품 원가', expectedProductCost],
       ['수수료', expectedFees],
       ['광고비', expectedAdCost],
       ['배송·포장', shipping + packaging],
       ['반품 손실', expectedReturnLoss],
       ['순이익', expectedProfit]
-    ];
-    breakdown.innerHTML = rows.map(([label, value]) => `
-      <div class="breakdown-row ${label === '순이익' ? 'profit' : ''}">
-        <span>${label}</span>
-        <div class="breakdown-track"><i style="width:${Math.min(Math.abs(value / price) * 100, 100)}%"></i></div>
-        <b>${money(value)}</b>
-      </div>`).join('');
-  }
-}
-
-function calculatePrice() {
-  const cost = numberValue('price-cost');
-  const extra = numberValue('price-extra');
-  const feeRate = safeRate(numberValue('price-fee'));
-  const adRate = safeRate(numberValue('price-ad'));
-  const returnRate = safeRate(numberValue('price-return'));
-  const targetProfit = numberValue('price-target');
-  const keptRate = 1 - returnRate;
-  const revenueFactor = keptRate * (1 - feeRate) - adRate;
-
-  let recommendedPrice = 0;
-  if (revenueFactor > 0) {
-    recommendedPrice = roundRecommendedPrice((targetProfit + cost * keptRate + extra) / revenueFactor);
+    ], price);
   }
 
-  const expectedProfit = recommendedPrice > 0
-    ? recommendedPrice * revenueFactor - cost * keptRate - extra
-    : 0;
-  const expectedMargin = recommendedPrice > 0 ? expectedProfit / recommendedPrice * 100 : 0;
+  function calculatePrice() {
+    const cost = numberValue('price-cost');
+    const extra = numberValue('price-extra');
+    const feeRate = safeRate(numberValue('price-fee'));
+    const adRate = safeRate(numberValue('price-ad'));
+    const returnRate = safeRate(numberValue('price-return'));
+    const targetProfit = numberValue('price-target');
+    const keptRate = 1 - returnRate;
+    const revenueFactor = keptRate * (1 - feeRate) - adRate;
+    const recommendedPrice = revenueFactor > 0
+      ? roundRecommendedPrice((targetProfit + cost * keptRate + extra) / revenueFactor)
+      : 0;
+    const expectedProfit = recommendedPrice > 0
+      ? recommendedPrice * revenueFactor - cost * keptRate - extra
+      : 0;
+    const expectedMargin = recommendedPrice > 0 ? expectedProfit / recommendedPrice * 100 : 0;
 
-  setText('price-value', recommendedPrice > 0 ? money(recommendedPrice) : '계산 불가');
-  setText('price-profit', recommendedPrice > 0 ? money(expectedProfit) : '-');
-  setText('price-margin', recommendedPrice > 0 ? percent(expectedMargin) : '-');
-  updatePriceRoundingLabel();
+    setText('price-value', recommendedPrice > 0 ? money(recommendedPrice) : '계산 불가');
+    setText('price-profit', recommendedPrice > 0 ? money(expectedProfit) : '-');
+    setText('price-margin', recommendedPrice > 0 ? percent(expectedMargin) : '-');
+    updatePriceRoundingLabel();
 
-  if (revenueFactor <= 0) {
-    setDiagnosis('price-diagnosis', '확인 필요', '수수료·광고비·반품률 합계가 지나치게 높습니다. 판매가를 올리기 전에 비용 비율부터 줄이세요.');
-  } else if (expectedMargin < 10) {
-    setDiagnosis('price-diagnosis', '가격 팁', '목표 이익은 달성하지만 할인 여유가 거의 없습니다. 정기 세일이 있다면 정상가를 더 높게 잡아야 합니다.');
-  } else {
-    setDiagnosis('price-diagnosis', '가격 팁', '이 가격은 계산상 최소값입니다. 시장 가격대와 향후 할인 계획을 함께 비교해 최종 가격을 정하세요.');
+    if (revenueFactor <= 0) {
+      setDiagnosis('price-diagnosis', '확인 필요', '수수료·광고비·반품률 합계가 지나치게 높습니다. 판매가를 올리기 전에 비용 비율부터 줄이세요.');
+    } else if (expectedMargin < 10) {
+      setDiagnosis('price-diagnosis', '가격 팁', '목표 이익은 달성하지만 할인 여유가 거의 없습니다. 정기 세일이 있다면 정상가를 더 높게 잡아야 합니다.');
+    } else {
+      setDiagnosis('price-diagnosis', '가격 팁', '이 가격은 계산상 최소값입니다. 시장 가격대와 향후 할인 계획을 함께 비교해 최종 가격을 정하세요.');
+    }
   }
-}
 
-function calculateBreakEven() {
-  const fixedCost = numberValue('bep-fixed');
-  const averagePrice = numberValue('bep-price');
-  const variableCost = numberValue('bep-variable');
-  const operatingDays = Math.max(numberValue('bep-days'), 1);
-  const contribution = averagePrice - variableCost;
-  const units = contribution > 0 ? Math.ceil(fixedCost / contribution) : 0;
-  const sales = units * averagePrice;
-  const dailyUnits = units / operatingDays;
-  const badge = document.getElementById('bep-badge');
+  function calculateBreakEven() {
+    const fixedCost = numberValue('bep-fixed');
+    const averagePrice = numberValue('bep-price');
+    const variableCost = numberValue('bep-variable');
+    const operatingDays = Math.max(numberValue('bep-days'), 1);
+    const contribution = averagePrice - variableCost;
+    const units = contribution > 0 ? Math.ceil(fixedCost / contribution) : 0;
+    const sales = units * averagePrice;
+    const dailyUnits = units / operatingDays;
+    const badge = document.getElementById('bep-badge');
 
-  setText('bep-units', contribution > 0 ? `${units.toLocaleString()}개` : '계산 불가');
-  setText('bep-sales', contribution > 0 ? money(sales) : '-');
-  setText('bep-daily', contribution > 0 ? `${dailyUnits.toFixed(1)}개` : '-');
+    setText('bep-units', contribution > 0 ? `${units.toLocaleString()}개` : '계산 불가');
+    setText('bep-sales', contribution > 0 ? money(sales) : '-');
+    setText('bep-daily', contribution > 0 ? `${dailyUnits.toFixed(1)}개` : '-');
 
-  if (averagePrice <= 0) {
-    setBadge(badge, 'neutral', '판매가 입력 필요');
-    setDiagnosis('bep-diagnosis', '입력 필요', '평균 판매가를 입력하면 월 손익분기 판매량을 계산합니다.');
-  } else if (contribution <= 0) {
-    setBadge(badge, 'danger', '건당 손실 구조');
-    setDiagnosis('bep-diagnosis', '먼저 할 일', '평균 판매가가 건당 변동비보다 낮거나 같습니다. 판매량을 늘려도 고정비를 회수할 수 없습니다.');
-  } else if (dailyUnits >= 20) {
-    setBadge(badge, 'warning', '높은 판매 목표');
-    setDiagnosis('bep-diagnosis', '다음 확인', '하루 목표 판매량이 높습니다. 고정비 절감 또는 건당 이익 개선 시나리오와 비교하세요.');
-  } else {
-    setBadge(badge, 'good', '목표 설정 가능');
-    setDiagnosis('bep-diagnosis', '다음 확인', `월 ${units.toLocaleString()}개를 넘긴 뒤부터 추가 판매가 영업이익에 기여합니다.`);
+    if (averagePrice <= 0) {
+      setBadge(badge, 'neutral', '판매가 입력 필요');
+      setDiagnosis('bep-diagnosis', '입력 필요', '평균 판매가를 입력하면 월 손익분기 판매량을 계산합니다.');
+    } else if (contribution <= 0) {
+      setBadge(badge, 'danger', '건당 손실 구조');
+      setDiagnosis('bep-diagnosis', '먼저 할 일', '평균 판매가가 건당 변동비보다 낮거나 같습니다. 판매량을 늘려도 고정비를 회수할 수 없습니다.');
+    } else if (dailyUnits >= 20) {
+      setBadge(badge, 'warning', '높은 판매 목표');
+      setDiagnosis('bep-diagnosis', '다음 확인', '하루 목표 판매량이 높습니다. 고정비 절감 또는 건당 이익 개선 시나리오와 비교하세요.');
+    } else {
+      setBadge(badge, 'good', '목표 설정 가능');
+      setDiagnosis('bep-diagnosis', '다음 확인', `월 ${units.toLocaleString()}개를 넘긴 뒤부터 추가 판매가 영업이익에 기여합니다.`);
+    }
   }
-}
 
-function calculateInventory() {
-  const onHand = numberValue('inventory-stock');
-  const monthlySales = numberValue('inventory-sales');
-  const incoming = numberValue('inventory-incoming');
-  const leadWeeks = numberValue('inventory-lead');
-  const safetyStock = numberValue('inventory-safety');
-  const targetMonths = numberValue('inventory-target');
-  const totalAvailable = onHand + incoming;
-  const monthsOnHand = monthlySales > 0 ? totalAvailable / monthlySales : 0;
-  const dailySales = monthlySales / 30;
-  const reorderPoint = Math.ceil(dailySales * leadWeeks * 7 + safetyStock);
-  const targetStock = Math.ceil(monthlySales * targetMonths + safetyStock);
-  const suggestedOrder = Math.max(targetStock - totalAvailable, 0);
-  const badge = document.getElementById('inventory-badge');
+  function calculateInventory() {
+    const onHand = numberValue('inventory-stock');
+    const monthlySales = numberValue('inventory-sales');
+    const incoming = numberValue('inventory-incoming');
+    const leadWeeks = numberValue('inventory-lead');
+    const safetyStock = numberValue('inventory-safety');
+    const targetMonths = numberValue('inventory-target');
+    const totalAvailable = onHand + incoming;
+    const monthsOnHand = monthlySales > 0 ? totalAvailable / monthlySales : 0;
+    const dailySales = monthlySales / 30;
+    const reorderPoint = Math.ceil(dailySales * leadWeeks * 7 + safetyStock);
+    const targetStock = Math.ceil(monthlySales * targetMonths + safetyStock);
+    const suggestedOrder = Math.max(targetStock - totalAvailable, 0);
+    const badge = document.getElementById('inventory-badge');
 
-  setText('inventory-months', monthlySales > 0 ? `${monthsOnHand.toFixed(1)}개월` : '판매량 필요');
-  setText('inventory-rop', monthlySales > 0 ? `${reorderPoint.toLocaleString()}개` : '-');
-  setText('inventory-order', monthlySales > 0 ? `${suggestedOrder.toLocaleString()}개` : '-');
+    setText('inventory-months', monthlySales > 0 ? `${monthsOnHand.toFixed(1)}개월` : '판매량 필요');
+    setText('inventory-rop', monthlySales > 0 ? `${reorderPoint.toLocaleString()}개` : '-');
+    setText('inventory-order', monthlySales > 0 ? `${suggestedOrder.toLocaleString()}개` : '-');
 
-  if (monthlySales <= 0) {
-    setBadge(badge, 'neutral', '판매 데이터 필요');
-    setDiagnosis('inventory-diagnosis', '입력 필요', '최근 30일 판매량을 입력해야 재고 보유기간과 발주량을 계산할 수 있습니다.');
-  } else if (monthsOnHand > targetMonths * 1.5) {
-    setBadge(badge, 'danger', '과다 재고');
-    setDiagnosis('inventory-diagnosis', '먼저 할 일', '추가 발주를 멈추고 콘텐츠·세트 구성·프로모션 등 소진 계획을 먼저 세우세요.');
-  } else if (onHand <= reorderPoint) {
-    setBadge(badge, 'warning', '발주 검토 시점');
-    setDiagnosis('inventory-diagnosis', '다음 확인', `입고 예정 수량을 확인한 뒤 약 ${suggestedOrder.toLocaleString()}개 발주를 검토하세요.`);
-  } else if (monthsOnHand > targetMonths) {
-    setBadge(badge, 'warning', '목표보다 많음');
-    setDiagnosis('inventory-diagnosis', '다음 확인', '품절 위험은 낮지만 목표 보유기간을 초과합니다. 다음 발주를 늦추고 판매 추이를 확인하세요.');
-  } else {
-    setBadge(badge, 'good', '적정 범위');
-    setDiagnosis('inventory-diagnosis', '다음 확인', '현재 판매 속도와 목표 보유기간 기준으로 비교적 안정적인 재고 수준입니다.');
+    if (monthlySales <= 0) {
+      setBadge(badge, 'neutral', '판매 데이터 필요');
+      setDiagnosis('inventory-diagnosis', '입력 필요', '최근 30일 판매량을 입력해야 재고 보유기간과 발주량을 계산할 수 있습니다.');
+    } else if (monthsOnHand > targetMonths * 1.5) {
+      setBadge(badge, 'danger', '과다 재고');
+      setDiagnosis('inventory-diagnosis', '먼저 할 일', '추가 발주를 멈추고 콘텐츠·세트 구성·프로모션 등 소진 계획을 먼저 세우세요.');
+    } else if (onHand <= reorderPoint) {
+      setBadge(badge, 'warning', '발주 검토 시점');
+      setDiagnosis('inventory-diagnosis', '다음 확인', `입고 예정 수량을 확인한 뒤 약 ${suggestedOrder.toLocaleString()}개 발주를 검토하세요.`);
+    } else if (monthsOnHand > targetMonths) {
+      setBadge(badge, 'warning', '목표보다 많음');
+      setDiagnosis('inventory-diagnosis', '다음 확인', '품절 위험은 낮지만 목표 보유기간을 초과합니다. 다음 발주를 늦추고 판매 추이를 확인하세요.');
+    } else {
+      setBadge(badge, 'good', '적정 범위');
+      setDiagnosis('inventory-diagnosis', '다음 확인', '현재 판매 속도와 목표 보유기간 기준으로 비교적 안정적인 재고 수준입니다.');
+    }
   }
-}
 
-const calculators = {
-  profit: { formId: 'profit-form', panelId: 'profit-calculator', resultId: 'profit-result', calculate: calculateProfit },
-  price: { formId: 'price-form', panelId: 'price-calculator', resultId: 'price-result', calculate: calculatePrice },
-  bep: { formId: 'bep-form', panelId: 'bep-calculator', resultId: 'bep-result', calculate: calculateBreakEven },
-  inventory: { formId: 'inventory-form', panelId: 'inventory-calculator', resultId: 'inventory-result', calculate: calculateInventory }
-};
+  const calculators = {
+    profit: { formId: 'profit-form', panelId: 'profit-calculator', resultId: 'profit-result', calculate: calculateProfit },
+    price: { formId: 'price-form', panelId: 'price-calculator', resultId: 'price-result', calculate: calculatePrice },
+    bep: { formId: 'bep-form', panelId: 'bep-calculator', resultId: 'bep-result', calculate: calculateBreakEven },
+    inventory: { formId: 'inventory-form', panelId: 'inventory-calculator', resultId: 'inventory-result', calculate: calculateInventory }
+  };
 
-const storageKey = 'fashionops-main-calculator-values-v3';
-const legacyStorageKey = 'fashionops-main-calculator-values-v2';
-const calculatorInputs = [...document.querySelectorAll('#tools input[id]')];
-const defaultValues = Object.fromEntries(calculatorInputs.map((input) => [input.id, input.defaultValue]));
-const calculationFrames = new Map();
-let saveTimer = 0;
+  const storageKey = 'fashionops-main-calculator-values-v4';
+  const legacyStorageKeys = [
+    'fashionops-main-calculator-values-v3',
+    'fashionops-main-calculator-values-v2'
+  ];
+  const inputs = [...tools.querySelectorAll('input[id]')];
+  const defaults = Object.fromEntries(inputs.map((input) => [input.id, input.defaultValue]));
+  const calculationFrames = new Map();
+  let saveTimer = 0;
+  let activeKey = 'profit';
 
-try {
-  const savedValues = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey) || '{}');
-  calculatorInputs.forEach((input) => {
-    if (Object.prototype.hasOwnProperty.call(savedValues, input.id)) input.value = savedValues[input.id];
-  });
-} catch (error) {
   try {
-    localStorage.removeItem(storageKey);
-    localStorage.removeItem(legacyStorageKey);
-  } catch (storageError) {}
-}
-
-function saveCalculatorInputs() {
-  clearTimeout(saveTimer);
-  saveTimer = window.setTimeout(() => {
+    const raw = localStorage.getItem(storageKey)
+      || legacyStorageKeys.map((key) => localStorage.getItem(key)).find(Boolean)
+      || '{}';
+    const savedValues = JSON.parse(raw);
+    inputs.forEach((input) => {
+      if (Object.prototype.hasOwnProperty.call(savedValues, input.id)) input.value = savedValues[input.id];
+    });
+  } catch {
     try {
-      const values = Object.fromEntries(calculatorInputs.map((input) => [input.id, input.value]));
-      localStorage.setItem(storageKey, JSON.stringify(values));
-    } catch (error) {}
-  }, 180);
-}
+      localStorage.removeItem(storageKey);
+      legacyStorageKeys.forEach((key) => localStorage.removeItem(key));
+    } catch {}
+  }
 
-function runCalculation(key) {
-  calculators[key]?.calculate();
-}
+  function saveInputs() {
+    clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(() => {
+      try {
+        const values = Object.fromEntries(inputs.map((input) => [input.id, input.value]));
+        localStorage.setItem(storageKey, JSON.stringify(values));
+        legacyStorageKeys.forEach((key) => localStorage.removeItem(key));
+      } catch {}
+    }, 220);
+  }
 
-function scheduleCalculation(key) {
-  if (calculationFrames.has(key)) return;
-  const frame = requestAnimationFrame(() => {
-    calculationFrames.delete(key);
-    runCalculation(key);
-  });
-  calculationFrames.set(key, frame);
-}
+  function runCalculation(key = activeKey) {
+    calculators[key]?.calculate();
+  }
 
-function scrollToResult(resultId) {
-  if (!window.matchMedia('(max-width: 900px)').matches) return;
-  requestAnimationFrame(() => {
-    document.getElementById(resultId)?.scrollIntoView({
-      behavior: prefersReducedMotion.matches ? 'auto' : 'smooth',
-      block: 'start'
+  function scheduleCalculation(key) {
+    if (calculationFrames.has(key)) return;
+    calculationFrames.set(key, requestAnimationFrame(() => {
+      calculationFrames.delete(key);
+      runCalculation(key);
+    }));
+  }
+
+  function scrollToResult(resultId) {
+    if (!window.matchMedia('(max-width: 900px)').matches) return;
+    requestAnimationFrame(() => {
+      document.getElementById(resultId)?.scrollIntoView({
+        behavior: prefersReducedMotion.matches ? 'auto' : 'smooth',
+        block: 'start'
+      });
     });
+  }
+
+  function addResetButtons() {
+    Object.entries(calculators).forEach(([key, { formId }]) => {
+      const form = document.getElementById(formId);
+      const actions = form?.querySelector('.form-actions');
+      if (!form || !actions || actions.querySelector('[data-reset-form]')) return;
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'copy-button';
+      button.dataset.resetForm = key;
+      button.textContent = '입력값 초기화';
+      actions.appendChild(button);
+    });
+  }
+
+  function keepTabVisible(tab, smooth = false) {
+    const container = tab.parentElement;
+    if (!container) return;
+    const left = tab.offsetLeft - (container.clientWidth - tab.offsetWidth) / 2;
+    container.scrollTo({
+      left: Math.max(0, left),
+      behavior: smooth && !prefersReducedMotion.matches ? 'smooth' : 'auto'
+    });
+  }
+
+  function activateCalculator(requestedKey, updateUrl = false) {
+    activeKey = calculators[requestedKey] ? requestedKey : 'profit';
+    const selected = calculators[activeKey];
+
+    tools.querySelectorAll('[data-calculator-panel]').forEach((panel) => {
+      panel.hidden = panel.id !== selected.panelId;
+    });
+
+    tools.querySelectorAll('[data-calculator-tab]').forEach((tab, index) => {
+      if (!tab.id) tab.id = `calculator-tab-${tab.dataset.calculatorTab || index}`;
+      const active = tab.dataset.calculatorTab === activeKey;
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+      const panel = document.getElementById(tab.getAttribute('aria-controls'));
+      if (panel) panel.setAttribute('aria-labelledby', tab.id);
+      if (active && updateUrl) keepTabVisible(tab, true);
+    });
+
+    runCalculation();
+    if (updateUrl) history.replaceState(null, '', `#${selected.panelId}`);
+  }
+
+  tools.addEventListener('input', (event) => {
+    const input = event.target.closest('input[id]');
+    if (!input || !tools.contains(input)) return;
+    if (input.validity.valid) input.removeAttribute('aria-invalid');
+    else input.setAttribute('aria-invalid', 'true');
+
+    const key = input.closest('[data-calculator-panel]')?.dataset.calculatorPanel;
+    if (key) scheduleCalculation(key);
+    saveInputs();
   });
-}
 
-Object.entries(calculators).forEach(([key, { formId, resultId, calculate }]) => {
-  const form = document.getElementById(formId);
-  if (!form) return;
-
-  form.addEventListener('submit', (event) => {
+  tools.addEventListener('submit', (event) => {
+    const form = event.target.closest('form');
+    if (!form || !tools.contains(form)) return;
     event.preventDefault();
-    calculate();
-    scrollToResult(resultId);
+    const entry = Object.entries(calculators).find(([, calculator]) => calculator.formId === form.id);
+    if (!entry) return;
+    const [key, calculator] = entry;
+    runCalculation(key);
+    scrollToResult(calculator.resultId);
   });
 
-  form.querySelectorAll('input[id]').forEach((input) => {
-    input.addEventListener('input', () => {
-      input.setAttribute('aria-invalid', String(!input.validity.valid));
-      scheduleCalculation(key);
-      saveCalculatorInputs();
-    });
-  });
-
-  const actions = form.querySelector('.form-actions') || form;
-  if (!actions.querySelector('[data-reset-form]')) {
-    const resetButton = document.createElement('button');
-    resetButton.type = 'button';
-    resetButton.className = 'copy-button';
-    resetButton.dataset.resetForm = key;
-    resetButton.textContent = '입력값 초기화';
-    resetButton.addEventListener('click', () => {
-      form.querySelectorAll('input[id]').forEach((input) => {
-        input.value = defaultValues[input.id] ?? input.defaultValue;
+  tools.addEventListener('click', async (event) => {
+    const reset = event.target.closest('[data-reset-form]');
+    if (reset) {
+      const key = reset.dataset.resetForm;
+      const form = document.getElementById(calculators[key]?.formId);
+      form?.querySelectorAll('input[id]').forEach((input) => {
+        input.value = defaults[input.id] ?? input.defaultValue;
         input.removeAttribute('aria-invalid');
       });
-      saveCalculatorInputs();
-      calculate();
-    });
-    actions.appendChild(resetButton);
-  }
-});
+      saveInputs();
+      runCalculation(key);
+      return;
+    }
 
-function keepTabVisible(tab, smooth = false) {
-  const container = tab.parentElement;
-  if (!container) return;
-  const left = tab.offsetLeft - (container.clientWidth - tab.offsetWidth) / 2;
-  container.scrollTo({
-    left: Math.max(0, left),
-    behavior: smooth && !prefersReducedMotion.matches ? 'smooth' : 'auto'
-  });
-}
+    const tab = event.target.closest('[data-calculator-tab]');
+    if (tab) {
+      activateCalculator(tab.dataset.calculatorTab, true);
+      return;
+    }
 
-function activateCalculator(key, updateUrl = false) {
-  const selected = calculators[key] || calculators.profit;
-
-  document.querySelectorAll('[data-calculator-panel]').forEach((panel) => {
-    panel.hidden = panel.id !== selected.panelId;
-  });
-
-  document.querySelectorAll('[data-calculator-tab]').forEach((tab, index) => {
-    if (!tab.id) tab.id = `calculator-tab-${tab.dataset.calculatorTab || index}`;
-    const active = tab.dataset.calculatorTab === key;
-    tab.setAttribute('aria-selected', String(active));
-    tab.tabIndex = active ? 0 : -1;
-    const panel = document.getElementById(tab.getAttribute('aria-controls'));
-    if (panel) panel.setAttribute('aria-labelledby', tab.id);
-    if (active && updateUrl) keepTabVisible(tab, true);
+    const copy = event.target.closest('.copy-button[data-copy-target]');
+    if (!copy) return;
+    const target = document.getElementById(copy.dataset.copyTarget);
+    if (!target) return;
+    const original = copy.textContent;
+    try {
+      await navigator.clipboard.writeText(target.innerText);
+      copy.textContent = '복사 완료';
+    } catch {
+      copy.textContent = '복사 실패';
+    }
+    window.setTimeout(() => { copy.textContent = original; }, 1400);
   });
 
-  selected.calculate();
-  if (updateUrl) history.replaceState(null, '', `#${selected.panelId}`);
-}
-
-const keyByPanelId = Object.fromEntries(
-  Object.entries(calculators).map(([key, value]) => [value.panelId, key])
-);
-const initialPanelId = location.hash.slice(1);
-const initialKey = keyByPanelId[initialPanelId] || 'profit';
-activateCalculator(initialKey);
-
-if (keyByPanelId[initialPanelId]) {
-  requestAnimationFrame(() => {
-    document.getElementById(initialPanelId)?.scrollIntoView({ block: 'start' });
-  });
-}
-
-document.querySelectorAll('[data-calculator-tab]').forEach((tab) => {
-  tab.addEventListener('click', () => activateCalculator(tab.dataset.calculatorTab, true));
-  tab.addEventListener('keydown', (event) => {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+  tools.querySelector('.calculator-tabs')?.addEventListener('keydown', (event) => {
+    const tab = event.target.closest('[data-calculator-tab]');
+    if (!tab || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
-    const tabs = [...document.querySelectorAll('[data-calculator-tab]')];
+
+    const tabs = [...tools.querySelectorAll('[data-calculator-tab]')];
     const currentIndex = tabs.indexOf(tab);
     let nextIndex = currentIndex;
     if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
     if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
     if (event.key === 'Home') nextIndex = 0;
     if (event.key === 'End') nextIndex = tabs.length - 1;
+
     const next = tabs[nextIndex];
     next.focus();
     activateCalculator(next.dataset.calculatorTab, true);
   });
-});
 
-window.addEventListener('hashchange', () => {
-  const panelId = location.hash.slice(1);
-  const key = keyByPanelId[panelId];
-  if (!key) return;
-  activateCalculator(key);
-  requestAnimationFrame(() => document.getElementById(panelId)?.scrollIntoView({ block: 'start' }));
-});
+  const keyByPanelId = Object.fromEntries(
+    Object.entries(calculators).map(([key, value]) => [value.panelId, key])
+  );
+  const initialPanelId = location.hash.slice(1);
+  activateCalculator(keyByPanelId[initialPanelId] || 'profit');
 
-window.addEventListener('fashionops:currencychange', () => {
-  Object.values(calculators).forEach(({ calculate }) => calculate());
-});
+  if (keyByPanelId[initialPanelId]) {
+    requestAnimationFrame(() => {
+      document.getElementById(initialPanelId)?.scrollIntoView({ block: 'start' });
+    });
+  }
 
-document.querySelectorAll('.copy-button[data-copy-target]').forEach((button) => {
-  button.addEventListener('click', async () => {
-    const target = document.getElementById(button.dataset.copyTarget);
-    if (!target) return;
-    const original = button.textContent;
-    try {
-      await navigator.clipboard.writeText(target.innerText);
-      button.textContent = '복사 완료';
-    } catch (error) {
-      button.textContent = '복사 실패';
-    }
-    setTimeout(() => { button.textContent = original; }, 1400);
+  window.addEventListener('hashchange', () => {
+    const panelId = location.hash.slice(1);
+    const key = keyByPanelId[panelId];
+    if (!key) return;
+    activateCalculator(key);
+    requestAnimationFrame(() => {
+      document.getElementById(panelId)?.scrollIntoView({ block: 'start' });
+    });
   });
-});
 
-Object.values(calculators).forEach(({ calculate }) => calculate());
+  window.addEventListener('fashionops:currencychange', () => runCalculation(activeKey));
+  addResetButtons();
+}
