@@ -60,7 +60,9 @@ if (!existsSync(sitemapPath)) {
     const path = match[1] || 'index.html';
     if (!existsSync(join(root, path))) report(`sitemap.xml: 존재하지 않는 경로가 포함되어 있습니다: /${match[1]}`);
   }
-  if (!sitemap.includes('/weekly-profit-check.html')) report('sitemap.xml에 주간 운영 체크리스트가 없습니다.');
+  for (const requiredPath of ['/weekly-profit-check.html', '/online-store-profit-guide.html']) {
+    if (!sitemap.includes(requiredPath)) report(`sitemap.xml에 ${requiredPath}가 없습니다.`);
+  }
 }
 
 const adsPath = join(root, 'ads.txt');
@@ -119,13 +121,26 @@ if (existsSync(join(root, 'service-worker.js'))) {
   const worker = read('service-worker.js');
   if (!worker.includes("request.mode === 'navigate'")) report('service-worker.js: 문서 요청의 네트워크 우선 처리가 없습니다.');
   if (!worker.includes("caches.match('/offline.html')")) report('service-worker.js: 오프라인 복구 페이지가 연결되지 않았습니다.');
+  if (!/fashionops-shell-v\d+/.test(worker)) report('service-worker.js: 버전이 지정된 캐시 이름이 없습니다.');
 }
 
 if (existsSync(join(root, 'manifest.webmanifest'))) {
-  const manifest = JSON.parse(read('manifest.webmanifest'));
-  if (!Array.isArray(manifest.shortcuts) || manifest.shortcuts.length < 3) report('manifest.webmanifest: 재방문용 바로가기가 부족합니다.');
+  try {
+    const manifest = JSON.parse(read('manifest.webmanifest'));
+    if (!Array.isArray(manifest.shortcuts) || manifest.shortcuts.length < 3) report('manifest.webmanifest: 재방문용 바로가기가 부족합니다.');
+  } catch (error) {
+    report(`manifest.webmanifest: JSON 문법 오류가 있습니다: ${error.message}`);
+  }
 } else {
   report('manifest.webmanifest가 없습니다.');
+}
+
+if (existsSync(join(root, 'weekly-profit-check.html'))) {
+  const weeklyHtml = read('weekly-profit-check.html');
+  if (/<label[^>]*class=["'][^"']*check-item[^"']*["'][^>]*>[\s\S]*?<a\b/i.test(weeklyHtml)) {
+    report('weekly-profit-check.html: 체크박스 label 안에 이동 링크가 중첩되어 있습니다.');
+  }
+  if (!/role=["']progressbar["']/i.test(weeklyHtml)) report('weekly-profit-check.html: 진행률 접근성 속성이 없습니다.');
 }
 
 const middlewarePath = join(root, 'functions/_middleware.js');
@@ -133,11 +148,11 @@ if (!existsSync(middlewarePath)) {
   report('Cloudflare 미들웨어가 없습니다.');
 } else {
   const middleware = read('functions/_middleware.js');
-  if (!middleware.includes('/currency.js?v=4')) report('미들웨어가 최신 통화 런타임을 로드하지 않습니다.');
+  if (!middleware.includes('/currency.js')) report('미들웨어가 통화 런타임을 로드하지 않습니다.');
   if (!middleware.includes('/global-ux.js')) report('미들웨어가 접근성 툴팁 런타임을 로드하지 않습니다.');
   if (!middleware.includes('/bulk-import.js')) report('미들웨어가 국제 CSV 가져오기 런타임을 로드하지 않습니다.');
   if (!middleware.includes("pathname === '/profit-audit.html'")) report('bulk-import.js가 대량분석 페이지에만 제한되어 있지 않습니다.');
-  if (!middleware.includes('/engagement.js?v=2')) report('미들웨어가 최신 저장·공유·설치 런타임을 로드하지 않습니다.');
+  if (!middleware.includes('/engagement.js')) report('미들웨어가 저장·공유·설치 런타임을 로드하지 않습니다.');
   if (!middleware.includes('BreadcrumbList')) report('미들웨어에 브레드크럼 구조화 데이터가 없습니다.');
   if (!middleware.includes('twitter:card')) report('미들웨어에 공유용 메타태그가 없습니다.');
   if (!middleware.includes('utilityPaths') || !middleware.includes('shouldInjectAds')) report('404·오프라인 페이지 광고 제외 처리가 없습니다.');
