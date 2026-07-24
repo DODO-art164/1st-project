@@ -1,5 +1,12 @@
 /* Site-wide usability fixes loaded through Cloudflare Pages middleware. */
 
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  text-rendering:optimizeLegibility;
+}
+input,select,textarea,.result-panel,.metric-grid,.cost-breakdown,.audit-summary,.audit-table{
+  font-variant-numeric:tabular-nums;
+}
 .button,.calculate-button,.copy-button,.row-remove,.main-nav a{touch-action:manipulation}
 .result-panel{scroll-margin-top:96px}
 
