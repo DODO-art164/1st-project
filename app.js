@@ -1,5 +1,7 @@
-const money = (value) => `${Math.round(value).toLocaleString('ko-KR')}원`;
+const money = (value) => window.FashionOpsCurrency?.format?.(value)
+  || `${Math.round(value).toLocaleString('ko-KR')}원`;
 const percent = (value) => `${Number.isFinite(value) ? value.toFixed(1) : '0.0'}%`;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function numberValue(id) {
   const element = document.getElementById(id);
@@ -8,6 +10,29 @@ function numberValue(id) {
 
 function safeRate(value) {
   return Math.min(Math.max(value / 100, 0), 0.99);
+}
+
+function currentCurrency() {
+  return window.FashionOpsCurrency?.getCurrency?.() || 'KRW';
+}
+
+function priceRoundingIncrement() {
+  if (currentCurrency() === 'KRW') return 1000;
+  if (currentCurrency() === 'JPY') return 100;
+  return 0.01;
+}
+
+function roundRecommendedPrice(value) {
+  const increment = priceRoundingIncrement();
+  return Math.ceil((value - Number.EPSILON) / increment) * increment;
+}
+
+function updatePriceRoundingLabel() {
+  const badge = document.querySelector('#price-result .result-badge');
+  if (!badge) return;
+  if (currentCurrency() === 'KRW') badge.textContent = '1,000 KRW 단위 올림';
+  else if (currentCurrency() === 'JPY') badge.textContent = '100 JPY 단위 올림';
+  else badge.textContent = `0.01 ${currentCurrency()} 단위 올림`;
 }
 
 function setText(id, value) {
@@ -110,16 +135,18 @@ function calculatePrice() {
 
   let recommendedPrice = 0;
   if (revenueFactor > 0) {
-    recommendedPrice = (targetProfit + cost * keptRate + extra) / revenueFactor;
-    recommendedPrice = Math.ceil(recommendedPrice / 1000) * 1000;
+    recommendedPrice = roundRecommendedPrice((targetProfit + cost * keptRate + extra) / revenueFactor);
   }
 
-  const expectedProfit = recommendedPrice > 0 ? recommendedPrice * revenueFactor - cost * keptRate - extra : 0;
+  const expectedProfit = recommendedPrice > 0
+    ? recommendedPrice * revenueFactor - cost * keptRate - extra
+    : 0;
   const expectedMargin = recommendedPrice > 0 ? expectedProfit / recommendedPrice * 100 : 0;
 
   setText('price-value', recommendedPrice > 0 ? money(recommendedPrice) : '계산 불가');
-  setText('price-profit', money(expectedProfit));
-  setText('price-margin', percent(expectedMargin));
+  setText('price-profit', recommendedPrice > 0 ? money(expectedProfit) : '-');
+  setText('price-margin', recommendedPrice > 0 ? percent(expectedMargin) : '-');
+  updatePriceRoundingLabel();
 
   if (revenueFactor <= 0) {
     setDiagnosis('price-diagnosis', '확인 필요', '수수료·광고비·반품률 합계가 지나치게 높습니다. 판매가를 올리기 전에 비용 비율부터 줄이세요.');
@@ -141,7 +168,7 @@ function calculateBreakEven() {
   const dailyUnits = units / operatingDays;
   const badge = document.getElementById('bep-badge');
 
-  setText('bep-units', contribution > 0 ? `${units.toLocaleString('ko-KR')}개` : '계산 불가');
+  setText('bep-units', contribution > 0 ? `${units.toLocaleString()}개` : '계산 불가');
   setText('bep-sales', contribution > 0 ? money(sales) : '-');
   setText('bep-daily', contribution > 0 ? `${dailyUnits.toFixed(1)}개` : '-');
 
@@ -156,7 +183,7 @@ function calculateBreakEven() {
     setDiagnosis('bep-diagnosis', '다음 확인', '하루 목표 판매량이 높습니다. 고정비 절감 또는 건당 이익 개선 시나리오와 비교하세요.');
   } else {
     setBadge(badge, 'good', '목표 설정 가능');
-    setDiagnosis('bep-diagnosis', '다음 확인', `월 ${units.toLocaleString('ko-KR')}개를 넘긴 뒤부터 추가 판매가 영업이익에 기여합니다.`);
+    setDiagnosis('bep-diagnosis', '다음 확인', `월 ${units.toLocaleString()}개를 넘긴 뒤부터 추가 판매가 영업이익에 기여합니다.`);
   }
 }
 
@@ -176,8 +203,8 @@ function calculateInventory() {
   const badge = document.getElementById('inventory-badge');
 
   setText('inventory-months', monthlySales > 0 ? `${monthsOnHand.toFixed(1)}개월` : '판매량 필요');
-  setText('inventory-rop', monthlySales > 0 ? `${reorderPoint.toLocaleString('ko-KR')}개` : '-');
-  setText('inventory-order', monthlySales > 0 ? `${suggestedOrder.toLocaleString('ko-KR')}개` : '-');
+  setText('inventory-rop', monthlySales > 0 ? `${reorderPoint.toLocaleString()}개` : '-');
+  setText('inventory-order', monthlySales > 0 ? `${suggestedOrder.toLocaleString()}개` : '-');
 
   if (monthlySales <= 0) {
     setBadge(badge, 'neutral', '판매 데이터 필요');
@@ -187,7 +214,7 @@ function calculateInventory() {
     setDiagnosis('inventory-diagnosis', '먼저 할 일', '추가 발주를 멈추고 콘텐츠·세트 구성·프로모션 등 소진 계획을 먼저 세우세요.');
   } else if (onHand <= reorderPoint) {
     setBadge(badge, 'warning', '발주 검토 시점');
-    setDiagnosis('inventory-diagnosis', '다음 확인', `입고 예정 수량을 확인한 뒤 약 ${suggestedOrder.toLocaleString('ko-KR')}개 발주를 검토하세요.`);
+    setDiagnosis('inventory-diagnosis', '다음 확인', `입고 예정 수량을 확인한 뒤 약 ${suggestedOrder.toLocaleString()}개 발주를 검토하세요.`);
   } else if (monthsOnHand > targetMonths) {
     setBadge(badge, 'warning', '목표보다 많음');
     setDiagnosis('inventory-diagnosis', '다음 확인', '품절 위험은 낮지만 목표 보유기간을 초과합니다. 다음 발주를 늦추고 판매 추이를 확인하세요.');
@@ -204,30 +231,55 @@ const calculators = {
   inventory: { formId: 'inventory-form', panelId: 'inventory-calculator', resultId: 'inventory-result', calculate: calculateInventory }
 };
 
-const storageKey = 'fashionops-main-calculator-values-v2';
+const storageKey = 'fashionops-main-calculator-values-v3';
+const legacyStorageKey = 'fashionops-main-calculator-values-v2';
 const calculatorInputs = [...document.querySelectorAll('#tools input[id]')];
 const defaultValues = Object.fromEntries(calculatorInputs.map((input) => [input.id, input.defaultValue]));
+const calculationFrames = new Map();
+let saveTimer = 0;
 
 try {
-  const savedValues = JSON.parse(localStorage.getItem(storageKey) || '{}');
+  const savedValues = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey) || '{}');
   calculatorInputs.forEach((input) => {
     if (Object.prototype.hasOwnProperty.call(savedValues, input.id)) input.value = savedValues[input.id];
   });
 } catch (error) {
-  try { localStorage.removeItem(storageKey); } catch (storageError) {}
+  try {
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem(legacyStorageKey);
+  } catch (storageError) {}
 }
 
 function saveCalculatorInputs() {
-  try {
-    const values = Object.fromEntries(calculatorInputs.map((input) => [input.id, input.value]));
-    localStorage.setItem(storageKey, JSON.stringify(values));
-  } catch (error) {}
+  clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(() => {
+    try {
+      const values = Object.fromEntries(calculatorInputs.map((input) => [input.id, input.value]));
+      localStorage.setItem(storageKey, JSON.stringify(values));
+    } catch (error) {}
+  }, 180);
+}
+
+function runCalculation(key) {
+  calculators[key]?.calculate();
+}
+
+function scheduleCalculation(key) {
+  if (calculationFrames.has(key)) return;
+  const frame = requestAnimationFrame(() => {
+    calculationFrames.delete(key);
+    runCalculation(key);
+  });
+  calculationFrames.set(key, frame);
 }
 
 function scrollToResult(resultId) {
   if (!window.matchMedia('(max-width: 900px)').matches) return;
   requestAnimationFrame(() => {
-    document.getElementById(resultId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById(resultId)?.scrollIntoView({
+      behavior: prefersReducedMotion.matches ? 'auto' : 'smooth',
+      block: 'start'
+    });
   });
 }
 
@@ -244,7 +296,7 @@ Object.entries(calculators).forEach(([key, { formId, resultId, calculate }]) => 
   form.querySelectorAll('input[id]').forEach((input) => {
     input.addEventListener('input', () => {
       input.setAttribute('aria-invalid', String(!input.validity.valid));
-      calculate();
+      scheduleCalculation(key);
       saveCalculatorInputs();
     });
   });
@@ -272,7 +324,10 @@ function keepTabVisible(tab, smooth = false) {
   const container = tab.parentElement;
   if (!container) return;
   const left = tab.offsetLeft - (container.clientWidth - tab.offsetWidth) / 2;
-  container.scrollTo({ left: Math.max(0, left), behavior: smooth ? 'smooth' : 'auto' });
+  container.scrollTo({
+    left: Math.max(0, left),
+    behavior: smooth && !prefersReducedMotion.matches ? 'smooth' : 'auto'
+  });
 }
 
 function activateCalculator(key, updateUrl = false) {
@@ -296,7 +351,9 @@ function activateCalculator(key, updateUrl = false) {
   if (updateUrl) history.replaceState(null, '', `#${selected.panelId}`);
 }
 
-const keyByPanelId = Object.fromEntries(Object.entries(calculators).map(([key, value]) => [value.panelId, key]));
+const keyByPanelId = Object.fromEntries(
+  Object.entries(calculators).map(([key, value]) => [value.panelId, key])
+);
 const initialPanelId = location.hash.slice(1);
 const initialKey = keyByPanelId[initialPanelId] || 'profit';
 activateCalculator(initialKey);
@@ -331,6 +388,10 @@ window.addEventListener('hashchange', () => {
   if (!key) return;
   activateCalculator(key);
   requestAnimationFrame(() => document.getElementById(panelId)?.scrollIntoView({ block: 'start' }));
+});
+
+window.addEventListener('fashionops:currencychange', () => {
+  Object.values(calculators).forEach(({ calculate }) => calculate());
 });
 
 document.querySelectorAll('.copy-button[data-copy-target]').forEach((button) => {
