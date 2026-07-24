@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>패션 셀러 수익 분석 도구·실전 가이드 | FashionOps</title>
-  <meta name="description" content="패션 브랜드와 의류 쇼핑몰을 위한 상품별 대량 손익 분석, 순이익, 판매가, 원가, 광고 ROAS, 할인과 재고 계산 도구를 제공합니다.">
+  <meta name="description" content="패션 브랜드와 의류 쇼핑몰을 위한 상품별 대량 손익 분석, 순이익, 판매가, 원가, 광고 ROAS, 할인, 재고와 주간 운영 점검 도구를 제공합니다.">
   <link rel="canonical" href="https://1st-project-3aj.pages.dev/resources.html">
   <link rel="icon" href="favicon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="ux.css">
   <style>
@@ -18,7 +19,7 @@
     .directory-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:16px;scrollbar-width:none}
     .directory-filters::-webkit-scrollbar{display:none}
     .directory-filter{flex:0 0 auto;min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font-weight:800;cursor:pointer}
-    .directory-filter[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#07110d}
+    .directory-filter[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
     .directory-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
     .directory-card{display:flex;flex-direction:column;min-height:180px;padding:22px;border:1px solid var(--line);border-radius:17px;background:var(--card)}
     .directory-card:hover{border-color:var(--accent)}
@@ -27,22 +28,23 @@
     .directory-card small{color:var(--muted);line-height:1.6}
     .directory-card .tool-number{margin-bottom:auto}
     .directory-empty{padding:36px;border:1px dashed var(--line);border-radius:16px;text-align:center;color:var(--muted)}
-    .primary-tools{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin:20px 0 34px}
-    .primary-tools article{padding:25px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
+    .primary-tools{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px;margin:20px 0 34px}
+    .primary-tools article{display:flex;flex-direction:column;padding:25px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
     .primary-tools h2{margin:6px 0 8px}
-    .primary-tools p{color:var(--muted)}
-    @media(max-width:900px){.directory-grid{grid-template-columns:repeat(2,1fr)}.primary-tools{grid-template-columns:1fr}}
-    @media(max-width:620px){.directory-controls{grid-template-columns:1fr}.directory-grid{grid-template-columns:1fr}.directory-card{min-height:150px}}
+    .primary-tools p{color:var(--muted);line-height:1.65}
+    .primary-tools .button{margin-top:auto;align-self:flex-start}
+    @media(max-width:980px){.directory-grid{grid-template-columns:repeat(2,1fr)}.primary-tools{grid-template-columns:1fr}}
+    @media(max-width:620px){.directory-controls{grid-template-columns:1fr}.directory-grid{grid-template-columns:1fr}.directory-card{min-height:150px}.primary-tools .button{width:100%}}
   </style>
 </head>
 <body>
   <header class="site-header">
     <div class="container nav-wrap">
       <a class="brand" href="index.html"><span class="brand-mark">F</span><span>FashionOps</span></a>
-      <nav class="main-nav">
+      <nav class="main-nav" aria-label="주요 메뉴">
         <a href="index.html#tools">개별 계산</a>
         <a href="profit-audit.html">대량 분석</a>
-        <a class="nav-cta" href="seller-profit-audit.html">맞춤 진단</a>
+        <a class="nav-cta" href="weekly-profit-check.html">주간 점검</a>
       </nav>
     </div>
   </header>
@@ -52,7 +54,7 @@
       <div class="container app-hero-inner">
         <span class="eyebrow"><span class="live-dot"></span> 전체 도구 찾기</span>
         <h1>필요한 계산기만<br><em>빠르게 찾으세요.</em></h1>
-        <p class="hero-description">도구 이름이나 해결하고 싶은 문제를 검색하거나 카테고리를 선택하세요.</p>
+        <p class="hero-description">도구 이름이나 해결하고 싶은 문제를 검색하세요. 저장한 계산이 있으면 이 화면에서 다시 이어서 열 수 있습니다.</p>
       </div>
     </section>
 
@@ -66,6 +68,12 @@
             <a class="button primary" href="profit-audit.html">대량 분석 시작</a>
           </article>
           <article>
+            <span class="section-kicker">매주 확인한다면</span>
+            <h2>주간 운영 체크리스트</h2>
+            <p>매출·광고·반품·재고를 같은 순서로 점검하고 진행률을 주차별로 저장합니다.</p>
+            <a class="button secondary" href="weekly-profit-check.html">이번 주 점검</a>
+          </article>
+          <article>
             <span class="section-kicker">실행안이 필요하다면</span>
             <h2>맞춤 수익성 진단</h2>
             <p>가격·광고·할인·재고의 우선순위를 정리합니다.</p>
@@ -76,7 +84,7 @@
         <div class="directory-controls">
           <label class="directory-search">
             <span aria-hidden="true">⌕</span>
-            <input id="tool-search" type="search" placeholder="예: 할인, 광고비, 재고, 창업비용" autocomplete="off">
+            <input id="tool-search" type="search" placeholder="예: 할인, 광고비, 재고, 창업비용" autocomplete="off" aria-label="도구 검색">
           </label>
           <span class="directory-count" id="tool-result-count" aria-live="polite"></span>
         </div>
@@ -87,7 +95,7 @@
           <button class="directory-filter" type="button" data-tool-filter="marketing" aria-pressed="false">광고·판매</button>
           <button class="directory-filter" type="button" data-tool-filter="inventory" aria-pressed="false">재고·생산</button>
           <button class="directory-filter" type="button" data-tool-filter="startup" aria-pressed="false">창업</button>
-          <button class="directory-filter" type="button" data-tool-filter="guide" aria-pressed="false">가이드</button>
+          <button class="directory-filter" type="button" data-tool-filter="guide" aria-pressed="false">가이드·루틴</button>
         </div>
 
         <div class="directory-grid">
@@ -95,6 +103,8 @@
           <a class="directory-card" href="index.html#price-calculator" data-tool-card data-category="profit"><span class="tool-number">수익·가격</span><b>목표 판매가 계산기</b><small>원하는 순이익을 기준으로 필요한 최소 판매가를 역산합니다.</small></a>
           <a class="directory-card" href="index.html#bep-calculator" data-tool-card data-category="profit"><span class="tool-number">수익·가격</span><b>손익분기점 계산기</b><small>월 고정비를 회수하기 위한 최소 판매량과 매출을 계산합니다.</small></a>
           <a class="directory-card" href="index.html#inventory-calculator" data-tool-card data-category="inventory"><span class="tool-number">재고·생산</span><b>재고 위험·발주 계산기</b><small>재고 보유기간, 재주문점과 현재 발주 제안을 확인합니다.</small></a>
+          <a class="directory-card" href="profit-audit.html" data-tool-card data-category="profit marketing inventory"><span class="tool-number">대량 분석</span><b>상품별 대량 손익 분석</b><small>최대 200개 상품의 적자 여부와 월 이익 기여도를 CSV로 비교합니다.</small></a>
+          <a class="directory-card" href="weekly-profit-check.html" data-tool-card data-category="guide profit marketing inventory"><span class="tool-number">주간 루틴</span><b>온라인 쇼핑몰 주간 운영 체크리스트</b><small>매출·광고·반품·재고를 매주 같은 순서로 확인하고 완료 기록을 남깁니다.</small></a>
           <a class="directory-card" href="startup-cost-calculator.html" data-tool-card data-category="startup"><span class="tool-number">창업</span><b>브랜드 창업비용 계산기</b><small>생산·촬영·마케팅·운영 예비비를 포함한 초기 자본을 계산합니다.</small></a>
           <a class="directory-card" href="clothing-cost-calculator.html" data-tool-card data-category="inventory profit"><span class="tool-number">재고·생산</span><b>의류 제작 원가 계산기</b><small>개발비와 불량률까지 포함한 실제 판매 가능 제품의 원가를 계산합니다.</small></a>
           <a class="directory-card" href="discount-profit-calculator.html" data-tool-card data-category="profit marketing"><span class="tool-number">광고·판매</span><b>할인 손익 계산기</b><small>할인 후 순이익과 적자를 피할 수 있는 최대 할인율을 확인합니다.</small></a>
