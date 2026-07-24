@@ -2,6 +2,9 @@ name: Static site quality
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'quality-check.trigger'
   schedule:
     - cron: '30 1 * * 1'
 
