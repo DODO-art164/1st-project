@@ -135,10 +135,13 @@ function calcRoas() {
   if (contributionRate <= 0) {
     badge('danger', '비용 구조 확인');
     diagnose('danger', '매출총이익률보다 기타 변동비율이 높거나 같습니다. 광고 효율을 보기 전에 상품 원가와 변동비 입력값을 확인하세요.');
+  } else if (ad <= 0) {
+    badge('neutral', '광고비 입력 필요');
+    diagnose('neutral', '현재 ROAS를 계산하려면 같은 기간의 광고비를 입력하세요. 손익분기 ROAS와 감당 가능한 최대 광고비는 입력한 마진 구조를 기준으로 표시됩니다.');
   } else if (adProfit < 0) {
     badge('danger', '광고 적자');
     diagnose('danger', '현재 ROAS가 손익분기 ROAS보다 낮습니다. 매출 확대보다 소재·타깃·상품 마진 개선이 우선입니다.');
-  } else if (ad > 0 && roas < breakEven * 1.2) {
+  } else if (roas < breakEven * 1.2) {
     badge('warning', '여유 적음');
     diagnose('warning', '광고 이익은 남지만 효율이 조금만 떨어져도 적자로 전환될 수 있습니다. 예산 증액은 단계적으로 진행하세요.');
   } else {
@@ -160,9 +163,9 @@ function calcMarketplace() {
   const revenue = price * kept;
   const fees = revenue * (platform + payment);
   const adCost = price * ad;
-  const profit = revenue - (cost * kept) - fees - adCost - shipping - (returnRate * returnLoss);
-  const payout = revenue - fees - adCost;
-  const margin = revenue > 0 ? profit / revenue * 100 : 0;
+  const payout = revenue - fees;
+  const profit = payout - adCost - (cost * kept) - shipping - (returnRate * returnLoss);
+  const margin = price > 0 ? profit / price * 100 : 0;
   const feeAmount = fees + adCost;
 
   set('market-profit', fmtMoney(profit));
