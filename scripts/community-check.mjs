@@ -18,7 +18,7 @@ const requireText = (source, text, message) => {
 const requiredFiles = [
   'community.html', 'community-write.html', 'community-rules.html', 'community-admin.html',
   'community.css', 'community.js', 'community-schema.sql', 'COMMUNITY_SETUP.md',
-  'functions/api/community/[[path]].js', 'functions/community/post/[id].js'
+  'functions/api/community/_middleware.js', 'functions/api/community/[[path]].js', 'functions/community/post/[id].js'
 ];
 requiredFiles.forEach(requireFile);
 
@@ -47,6 +47,11 @@ for (const table of ['posts', 'comments', 'reactions', 'reports', 'rate_limits',
 }
 requireText(schema, 'FashionOps 운영팀', 'community-schema.sql: 출처가 명확한 초기 운영 글이 없습니다.');
 requireText(schema, 'idx_posts_public_latest', 'community-schema.sql: 공개 게시글 조회 인덱스가 없습니다.');
+
+const guard = requireFile('functions/api/community/_middleware.js');
+for (const marker of ['RESERVED_NICKNAME', 'FashionOps', '운영', 'MAX_REQUEST_BYTES', 'request_too_large', 'nickname_reserved']) {
+  requireText(guard, marker, `커뮤니티 보호 미들웨어: ${marker} 처리가 없습니다.`);
+}
 
 const api = requireFile('functions/api/community/[[path]].js');
 for (const marker of [
@@ -80,7 +85,7 @@ for (const path of ['/community-write.html', '/community-admin.html', '/communit
 }
 
 const worker = requireFile('service-worker.js');
-requireText(worker, "fashionops-shell-v8", 'service-worker.js: 커뮤니티 캐시 정책이 반영된 최신 캐시 버전이 아닙니다.');
+requireText(worker, 'fashionops-shell-v8', 'service-worker.js: 커뮤니티 캐시 정책이 반영된 최신 캐시 버전이 아닙니다.');
 requireText(worker, "!url.pathname.startsWith('/community')", 'service-worker.js: 커뮤니티 HTML 캐시 제외가 없습니다.');
 requireText(worker, "!url.pathname.startsWith('/api/')", 'service-worker.js: API 요청 캐시 제외가 없습니다.');
 
