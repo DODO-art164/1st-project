@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>커뮤니티 글쓰기 | FashionOps</title>
+  <meta name="description" content="FashionOps 사업자 커뮤니티에 온라인 사업, 쇼핑몰 운영, 광고, 플랫폼과 창업 경험을 공유하세요.">
+  <meta name="robots" content="noindex,follow">
+  <link rel="canonical" href="https://1st-project-3aj.pages.dev/community-write.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="community.css?v=1">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+</head>
+<body data-community-page="write">
+  <header class="site-header ad-exclusion-zone" id="site-navigation">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html"><span class="brand-mark">F</span><span>FashionOps</span></a>
+      <nav class="main-nav" aria-label="주요 메뉴"><a href="community.html">커뮤니티</a><a href="community-rules.html">이용규칙</a><a class="nav-cta" href="resources.html">전체도구</a></nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="community-form-shell">
+      <div class="community-notice" id="community-setup-notice" hidden>D1 데이터베이스 연결 후 글쓰기가 활성화됩니다.</div>
+      <article class="community-form-card">
+        <header class="community-form-head">
+          <a class="back-link" href="community.html">← 커뮤니티로 돌아가기</a>
+          <span class="section-kicker">COMMUNITY</span>
+          <h1 id="community-form-title">새 게시글 작성</h1>
+          <p>개인정보와 공개하면 곤란한 사업 자료는 제외하고 경험과 질문을 나눠주세요.</p>
+        </header>
+
+        <form class="community-form" id="community-write-form">
+          <label class="community-field">
+            <span>게시판</span>
+            <select id="community-category-select" required>
+              <option value="free">자유게시판</option>
+              <option value="question">질문·답변</option>
+              <option value="operations">매출·운영</option>
+              <option value="marketing">마케팅·광고</option>
+              <option value="platform">판매 플랫폼</option>
+              <option value="information">정보·자료</option>
+              <option value="promotion">홍보·협업</option>
+            </select>
+          </label>
+
+          <label class="community-field">
+            <span>제목</span>
+            <input id="community-title" type="text" minlength="4" maxlength="100" autocomplete="off" required placeholder="내용을 정확히 알 수 있는 제목을 적어주세요">
+          </label>
+
+          <label class="community-field">
+            <span>본문</span>
+            <textarea id="community-body" minlength="20" maxlength="5000" required placeholder="상황, 이미 시도한 방법과 궁금한 점을 구체적으로 적으면 더 좋은 답변을 받을 수 있습니다."></textarea>
+            <span class="community-char-count" id="community-char-count">0 / 5,000</span>
+          </label>
+
+          <div class="community-form-row">
+            <label class="community-field">
+              <span>닉네임</span>
+              <input id="community-nickname" type="text" minlength="2" maxlength="20" autocomplete="nickname" required placeholder="2~20자">
+            </label>
+            <label class="community-field">
+              <span>수정·삭제 비밀번호</span>
+              <input id="community-password" type="password" minlength="4" maxlength="64" autocomplete="new-password" required placeholder="4자 이상">
+              <small class="community-help">서버에는 비밀번호 원문이 저장되지 않습니다. 잊어버리면 글을 직접 수정하거나 삭제할 수 없습니다.</small>
+            </label>
+          </div>
+
+          <label class="community-rule-check"><input type="checkbox" required><span><a href="community-rules.html" target="_blank" rel="noopener">커뮤니티 이용규칙</a>을 확인했으며 개인정보, 불법 콘텐츠, 혐오·괴롭힘과 반복 홍보 글을 올리지 않겠습니다.</span></label>
+          <div id="community-turnstile"></div>
+          <div class="community-form-message" id="community-form-message" hidden aria-live="polite"></div>
+          <div class="community-form-actions">
+            <a class="button secondary" href="community.html">취소</a>
+            <button class="button primary" type="submit"><span id="community-submit-label">게시글 등록</span></button>
+          </div>
+        </form>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 FashionOps</span><span><a href="community-rules.html">커뮤니티 규칙</a> · <a href="privacy.html">개인정보처리방침</a></span></div></footer>
+  <script src="community.js?v=1" defer></script>
+</body>
+</html>
