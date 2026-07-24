@@ -11,29 +11,41 @@
     ['SGD', 'SGD · Singapore Dollar']
   ];
   const zeroDecimalCurrencies = new Set(['KRW', 'JPY']);
-  const storageKey = 'fashionops-currency-v1';
   const supportedCodes = new Set(currencies.map(([code]) => code));
+  const storageKey = 'fashionops-currency-v2';
+  const formatterCache = new Map();
   let currentCurrency = 'KRW';
+  let localizationFrame = 0;
+  let calculatorPage = false;
 
   try {
-    const saved = localStorage.getItem(storageKey);
+    const saved = localStorage.getItem(storageKey) || localStorage.getItem('fashionops-currency-v1');
     if (saved && supportedCodes.has(saved)) currentCurrency = saved;
   } catch (error) {}
 
-  function fractionDigits() {
-    return zeroDecimalCurrencies.has(currentCurrency) ? 0 : 2;
+  function fractionDigits(currency = currentCurrency) {
+    return zeroDecimalCurrencies.has(currency) ? 0 : 2;
+  }
+
+  function getFormatter(currency = currentCurrency) {
+    const locale = navigator.language || 'en-US';
+    const key = `${locale}:${currency}`;
+    if (!formatterCache.has(key)) {
+      formatterCache.set(key, new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: fractionDigits(currency),
+        maximumFractionDigits: fractionDigits(currency)
+      }));
+    }
+    return formatterCache.get(key);
   }
 
   function format(value) {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return '-';
     try {
-      return new Intl.NumberFormat(navigator.language || 'en-US', {
-        style: 'currency',
-        currency: currentCurrency,
-        minimumFractionDigits: fractionDigits(),
-        maximumFractionDigits: fractionDigits()
-      }).format(numeric);
+      return getFormatter().format(numeric);
     } catch (error) {
       return `${numeric.toLocaleString()} ${currentCurrency}`;
     }
@@ -43,25 +55,12 @@
     return currentCurrency;
   }
 
-  function setCurrency(nextCurrency) {
-    const normalized = String(nextCurrency || '').toUpperCase();
-    if (!supportedCodes.has(normalized) || normalized === currentCurrency) return;
-    currentCurrency = normalized;
-    try { localStorage.setItem(storageKey, currentCurrency); } catch (error) {}
-    updateCurrencyUnits();
-    refreshCalculators();
-    window.dispatchEvent(new CustomEvent('fashionops:currencychange', { detail: { currency: currentCurrency } }));
-  }
-
-  window.FashionOpsCurrency = { format, getCurrency, setCurrency, currencies: currencies.map(([code]) => code) };
-
   function markCurrencyInputs() {
     document.querySelectorAll('.input-wrap i').forEach((unit) => {
       const text = unit.textContent.trim();
-      if (text === '원' || unit.dataset.currencyUnit === 'true') {
+      if (text === '원' || supportedCodes.has(text) || unit.dataset.currencyUnit === 'true') {
         unit.dataset.currencyUnit = 'true';
-        const input = unit.parentElement?.querySelector('input');
-        if (input) input.dataset.currencyInput = 'true';
+        unit.parentElement?.querySelector('input')?.setAttribute('data-currency-input', 'true');
       }
     });
     document.querySelectorAll('.bulk-price,.bulk-cost,.bulk-shipping').forEach((input) => {
@@ -82,51 +81,99 @@
     if (selector) selector.value = currentCurrency;
   }
 
-  function refreshCalculators() {
-    const inputs = [...document.querySelectorAll('[data-currency-input="true"]')];
-    const dispatched = new Set();
-    inputs.forEach((input) => {
-      const scope = input.closest('form, tr, .calculator-card') || input;
-      if (dispatched.has(scope)) return;
-      dispatched.add(scope);
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    });
-    requestAnimationFrame(localizeMoneyOutputs);
-  }
-
   function replaceWonText(text) {
-    return text.replace(/(-?[0-9][0-9,]*(?:\.[0-9]+)?)원/g, (_, raw) => {
+    return String(text).replace(/(-?[0-9][0-9,]*(?:\.[0-9]+)?)원/g, (_, raw) => {
       const value = Number(raw.replaceAll(',', ''));
       return format(value);
     });
   }
 
-  function localizeNode(node) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      if (node.nodeValue?.includes('원')) node.nodeValue = replaceWonText(node.nodeValue);
+  function localizeElement(root) {
+    if (!root) return;
+    if (root.nodeType === Node.TEXT_NODE) {
+      if (root.nodeValue?.includes('원')) root.nodeValue = replaceWonText(root.nodeValue);
       return;
     }
-    if (!(node instanceof Element)) return;
-    if (node.matches('script,style,input,textarea,option')) return;
-    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
-    const textNodes = [];
-    while (walker.nextNode()) textNodes.push(walker.currentNode);
-    textNodes.forEach((textNode) => {
-      if (textNode.nodeValue?.includes('원')) textNode.nodeValue = replaceWonText(textNode.nodeValue);
-    });
+    if (!(root instanceof Element) || root.matches('script,style,input,textarea,option')) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node.nodeValue?.includes('원')) node.nodeValue = replaceWonText(node.nodeValue);
+    }
   }
 
   function localizeMoneyOutputs() {
+    if (!calculatorPage) return;
     const selectors = [
-      '.result-panel', '.audit-summary', '.audit-table .row-profit', '.audit-table .row-monthly',
-      '.audit-diagnosis', '.cost-breakdown', '.diagnosis'
+      '.result-panel',
+      '.audit-summary',
+      '.audit-table .row-profit',
+      '.audit-table .row-monthly',
+      '.audit-diagnosis',
+      '.cost-breakdown',
+      '.diagnosis'
     ];
-    document.querySelectorAll(selectors.join(',')).forEach(localizeNode);
+    document.querySelectorAll(selectors.join(',')).forEach(localizeElement);
   }
 
+  function scheduleLocalization() {
+    if (!calculatorPage || localizationFrame) return;
+    localizationFrame = requestAnimationFrame(() => {
+      localizationFrame = 0;
+      localizeMoneyOutputs();
+    });
+  }
+
+  function recalculatePageOnce() {
+    if (document.getElementById('product-rows') && typeof window.calculateAll === 'function') {
+      window.calculateAll();
+      return;
+    }
+
+    const mainCalculators = ['calculateProfit', 'calculatePrice', 'calculateBreakEven', 'calculateInventory'];
+    let mainFound = false;
+    mainCalculators.forEach((name) => {
+      if (typeof window[name] === 'function') {
+        window[name]();
+        mainFound = true;
+      }
+    });
+    if (mainFound) return;
+
+    const specialByTool = {
+      startup: 'calcStartup',
+      cost: 'calcClothingCost',
+      discount: 'calcDiscount',
+      roas: 'calcRoas',
+      marketplace: 'calcMarketplace'
+    };
+    const functionName = specialByTool[document.body.dataset.tool];
+    if (functionName && typeof window[functionName] === 'function') window[functionName]();
+  }
+
+  function setCurrency(nextCurrency) {
+    const normalized = String(nextCurrency || '').toUpperCase();
+    if (!supportedCodes.has(normalized) || normalized === currentCurrency) return;
+    currentCurrency = normalized;
+    try { localStorage.setItem(storageKey, currentCurrency); } catch (error) {}
+    updateCurrencyUnits();
+    recalculatePageOnce();
+    scheduleLocalization();
+    window.dispatchEvent(new CustomEvent('fashionops:currencychange', { detail: { currency: currentCurrency } }));
+  }
+
+  window.FashionOpsCurrency = {
+    format,
+    getCurrency,
+    setCurrency,
+    currencies: currencies.map(([code]) => code)
+  };
+
   function mountCurrencySelector() {
-    const hasMoneyCalculator = [...document.querySelectorAll('.input-wrap i')].some((unit) => unit.textContent.trim() === '원')
+    const hasMoneyCalculator = [...document.querySelectorAll('.input-wrap i')]
+      .some((unit) => unit.textContent.trim() === '원' || supportedCodes.has(unit.textContent.trim()))
       || Boolean(document.querySelector('.bulk-price'));
+    calculatorPage = hasMoneyCalculator;
     if (!hasMoneyCalculator || document.getElementById('fashionops-currency')) return;
 
     const target = document.querySelector('.workspace-section .container, #audit .container, .tools-section .container');
@@ -141,7 +188,7 @@
           ${currencies.map(([code, label]) => `<option value="${code}">${label}</option>`).join('')}
         </select>
       </label>
-      <p>모든 금액을 선택한 통화 단위로 입력하세요. 환율 변환은 하지 않습니다. / No exchange-rate conversion.</p>`;
+      <p>금액을 선택한 통화 단위로 입력하세요. 환율은 자동 변환하지 않습니다. / Enter all values in the selected currency.</p>`;
     target.prepend(bar);
 
     const selector = bar.querySelector('select');
@@ -156,7 +203,7 @@
     document.addEventListener('pointerdown', (event) => {
       const active = document.activeElement;
       if (active?.classList?.contains('tip') && !event.target.closest('.tip')) active.blur();
-    });
+    }, { passive: true });
   }
 
   function addEnglishCsvTemplate() {
@@ -202,7 +249,7 @@
         const monthlyRevenue = expectedRevenue * units;
         const monthlyProfit = unitProfit * units;
         const status = unitProfit < 0 ? 'Loss' : margin < 10 ? 'Risk' : margin < 20 ? 'Improve' : 'Healthy';
-        return [currentCurrency, name, price, cost, fee, ad, shipping, returns, units, Math.round(unitProfit * 100) / 100, margin.toFixed(1), Math.round(monthlyRevenue * 100) / 100, Math.round(monthlyProfit * 100) / 100, status];
+        return [currentCurrency, name, price, cost, fee, ad, shipping, returns, units, unitProfit, margin.toFixed(1), monthlyRevenue, monthlyProfit, status];
       }).filter(Boolean);
 
       const status = document.getElementById('import-status');
@@ -214,10 +261,10 @@
         return;
       }
 
-      const header = ['Currency','Product name','Price','Cost','Fee rate','Ad rate','Shipping','Return rate','Monthly units','Unit profit','Profit margin','Expected monthly revenue','Expected monthly profit','Status'];
+      const header = ['Currency', 'Product name', 'Price', 'Cost', 'Fee rate', 'Ad rate', 'Shipping', 'Return rate', 'Monthly units', 'Unit profit', 'Profit margin', 'Expected monthly revenue', 'Expected monthly profit', 'Status'];
       const csv = '\ufeff' + [header, ...rows]
         .map((line) => line.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(','))
-        .join('\n');
+        .join('\r\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
@@ -226,7 +273,7 @@
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 0);
       if (status) {
         status.textContent = `${rows.length}개 상품의 분석 결과를 ${currentCurrency} 기준으로 저장했습니다.`;
         status.dataset.type = 'success';
@@ -241,14 +288,30 @@
     improveTooltips();
     addEnglishCsvTemplate();
     installBulkExportOverride();
-    localizeMoneyOutputs();
+    scheduleLocalization();
 
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'characterData') localizeNode(mutation.target);
-        mutation.addedNodes.forEach(localizeNode);
-      });
+    document.addEventListener('input', (event) => {
+      if (event.target.matches('[data-currency-input="true"], .bulk-price, .bulk-cost, .bulk-shipping')) {
+        scheduleLocalization();
+      }
     });
-    observer.observe(document.body, { subtree: true, childList: true, characterData: true });
+
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('#add-row, #load-sample, #clear-rows')) {
+        requestAnimationFrame(() => {
+          updateCurrencyUnits();
+          scheduleLocalization();
+        });
+      }
+    });
+
+    const tableBody = document.getElementById('product-rows');
+    if (tableBody) {
+      const rowObserver = new MutationObserver(() => {
+        updateCurrencyUnits();
+        scheduleLocalization();
+      });
+      rowObserver.observe(tableBody, { childList: true });
+    }
   });
 })();
