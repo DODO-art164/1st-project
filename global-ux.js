@@ -2,6 +2,7 @@
   let tooltip = null;
   let activeTrigger = null;
   let hideTimer = 0;
+  const touchLikePointer = window.matchMedia('(hover: none), (pointer: coarse)');
 
   function ensureTooltip() {
     if (tooltip) return tooltip;
@@ -42,6 +43,7 @@
     if (!text) return;
     clearTimeout(hideTimer);
     const element = ensureTooltip();
+    if (activeTrigger && activeTrigger !== trigger) activeTrigger.removeAttribute('aria-describedby');
     activeTrigger = trigger;
     element.textContent = text;
     element.hidden = false;
@@ -68,13 +70,17 @@
       if (!trigger.getAttribute('aria-label')) {
         trigger.setAttribute('aria-label', `도움말: ${trigger.dataset.tip}`);
       }
-      trigger.setAttribute('aria-haspopup', 'true');
 
-      trigger.addEventListener('pointerenter', () => showTooltip(trigger));
-      trigger.addEventListener('pointerleave', () => scheduleHide(trigger));
+      trigger.addEventListener('pointerenter', () => {
+        if (!touchLikePointer.matches) showTooltip(trigger);
+      });
+      trigger.addEventListener('pointerleave', () => {
+        if (!touchLikePointer.matches) scheduleHide(trigger);
+      });
       trigger.addEventListener('focus', () => showTooltip(trigger));
       trigger.addEventListener('blur', () => hideTooltip(trigger));
       trigger.addEventListener('click', (event) => {
+        if (!touchLikePointer.matches) return;
         event.preventDefault();
         if (activeTrigger === trigger && tooltip && !tooltip.hidden) hideTooltip(trigger);
         else showTooltip(trigger);
