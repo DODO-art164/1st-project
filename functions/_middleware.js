@@ -110,7 +110,11 @@ export async function onRequest(context) {
   const needsBulkImport = !isErrorResponse && (pathname === '/profit-audit' || pathname === '/profit-audit.html');
   const needsEngagement = !isErrorResponse && engagementPaths.has(pathname);
   const needsGlobalUxScript = !isErrorResponse && engagementPaths.has(pathname);
-  const shouldInjectAds = !isErrorResponse && !nonAdPaths.has(pathname);
+  const isCommunityHome = pathname === '/community' || pathname === '/community.html';
+  const communityReady = Boolean(context.env.DB);
+  const shouldInjectAds = !isErrorResponse
+    && !nonAdPaths.has(pathname)
+    && (!isCommunityHome || communityReady);
 
   let html = await response.text();
   html = injectCommunityNav(html);
