@@ -3,6 +3,56 @@
 .button,.calculate-button,.copy-button,.row-remove,.main-nav a{touch-action:manipulation}
 .result-panel{scroll-margin-top:96px}
 
+/* 도움말이 입력창을 덮거나 마우스 포인터를 가로채지 않도록 위쪽에 표시합니다. */
+.tip{position:relative;flex:0 0 19px;z-index:30}
+.tip:hover::after,.tip:focus::after,.tip:focus-visible::after{
+  top:auto!important;
+  right:auto!important;
+  bottom:calc(100% + 10px)!important;
+  left:0!important;
+  width:min(280px,calc(100vw - 44px))!important;
+  margin:0!important;
+  transform:none!important;
+  pointer-events:none!important;
+  white-space:normal;
+}
+.tip:hover::before,.tip:focus::before,.tip:focus-visible::before{
+  content:"";
+  position:absolute;
+  left:6px;
+  bottom:calc(100% + 4px);
+  z-index:51;
+  border:6px solid transparent;
+  border-top-color:#172126;
+  pointer-events:none;
+}
+
+.currency-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin:0 0 16px;
+  padding:13px 15px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--card);
+}
+.currency-bar label{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800;white-space:nowrap}
+.currency-bar select{
+  min-height:40px;
+  max-width:230px;
+  padding:0 34px 0 11px;
+  border:1px solid var(--line-strong);
+  border-radius:10px;
+  background:var(--input);
+  color:var(--text);
+  font:inherit;
+  font-weight:750;
+  cursor:pointer;
+}
+.currency-bar p{margin:0;color:var(--muted);font-size:12px;line-height:1.55;text-align:right}
+
 @media(max-width:720px){
   .site-header{overflow:hidden}
   .nav-wrap{gap:10px}
@@ -37,9 +87,16 @@
   .legal-card .hero-actions{display:grid}
   .legal-card .hero-actions .button{width:100%}
   .result-panel{scroll-margin-top:128px}
+  .currency-bar{display:block;margin-bottom:13px}
+  .currency-bar label{justify-content:space-between;white-space:normal}
+  .currency-bar select{max-width:62%;min-width:0}
+  .currency-bar p{margin-top:8px;text-align:left}
+  .tip:hover::after,.tip:focus::after,.tip:focus-visible::after{width:min(250px,calc(100vw - 34px))!important}
 }
 
 @media(max-width:420px){
   .brand span:last-child{display:none}
   .main-nav{max-width:calc(100vw - 62px)}
+  .currency-bar label{display:grid;gap:7px}
+  .currency-bar select{width:100%;max-width:none}
 }
