@@ -124,16 +124,6 @@
     selector.addEventListener('change', () => setCurrency(selector.value));
   }
 
-  function improveTooltips() {
-    document.querySelectorAll('.tip[data-tip]').forEach((tip) => {
-      if (!tip.getAttribute('aria-label')) tip.setAttribute('aria-label', `도움말: ${tip.dataset.tip}`);
-    });
-    document.addEventListener('pointerdown', (event) => {
-      const active = document.activeElement;
-      if (active?.classList?.contains('tip') && !event.target.closest('.tip')) active.blur();
-    }, { passive: true });
-  }
-
   function addEnglishCsvTemplate() {
     const koreanTemplate = document.querySelector('a[href="profit-audit-template.csv"]');
     if (!koreanTemplate || document.querySelector('a[href="profit-audit-template-en.csv"]')) return;
@@ -149,13 +139,6 @@
   document.addEventListener('DOMContentLoaded', () => {
     mountCurrencySelector();
     updateCurrencyUnits();
-    improveTooltips();
     addEnglishCsvTemplate();
-
-    const tableBody = document.getElementById('product-rows');
-    if (tableBody) {
-      const rowObserver = new MutationObserver(updateCurrencyUnits);
-      rowObserver.observe(tableBody, { childList: true });
-    }
   });
 })();
