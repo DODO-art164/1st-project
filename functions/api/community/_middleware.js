@@ -1,3 +1,4 @@
+// Protect FashionOps staff identity and reject oversized community write requests before they reach D1.
 const RESERVED_NICKNAME = /(fashion\s*ops|fashionops|운영\s*팀|관리자|매니저|moderator|administrator|\badmin\b)/i;
 const MAX_REQUEST_BYTES = 24000;
 
