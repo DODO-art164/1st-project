@@ -9,28 +9,18 @@ const ENGAGEMENT_SCRIPT = '<script src="/engagement.js?v=2" defer></script>';
 const SITE_ORIGIN = 'https://1st-project-3aj.pages.dev';
 
 const currencyPaths = new Set([
-  '/',
-  '/index.html',
-  '/profit-audit',
-  '/profit-audit.html',
-  '/startup-cost-calculator',
-  '/startup-cost-calculator.html',
-  '/clothing-cost-calculator',
-  '/clothing-cost-calculator.html',
-  '/discount-profit-calculator',
-  '/discount-profit-calculator.html',
-  '/roas-calculator',
-  '/roas-calculator.html',
-  '/marketplace-profit-calculator',
-  '/marketplace-profit-calculator.html'
+  '/', '/index.html', '/profit-audit', '/profit-audit.html',
+  '/startup-cost-calculator', '/startup-cost-calculator.html',
+  '/clothing-cost-calculator', '/clothing-cost-calculator.html',
+  '/discount-profit-calculator', '/discount-profit-calculator.html',
+  '/roas-calculator', '/roas-calculator.html',
+  '/marketplace-profit-calculator', '/marketplace-profit-calculator.html'
 ]);
 
 const engagementPaths = new Set([
   ...currencyPaths,
-  '/resources',
-  '/resources.html',
-  '/weekly-profit-check',
-  '/weekly-profit-check.html'
+  '/resources', '/resources.html',
+  '/weekly-profit-check', '/weekly-profit-check.html'
 ]);
 
 const utilityPaths = new Set(['/404.html', '/offline.html']);
@@ -43,8 +33,8 @@ function escapeAttribute(value = '') {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
-function metadataFor(html, pathname) {
-  if (utilityPaths.has(pathname)) return [];
+function metadataFor(html, pathname, isErrorResponse) {
+  if (isErrorResponse || utilityPaths.has(pathname)) return [];
   const title = textContent(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || 'FashionOps');
   const description = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i)?.[1]
     || html.match(/<meta\s+content=["']([^"']*)["']\s+name=["']description["']/i)?.[1]
@@ -89,14 +79,15 @@ export async function onRequest(context) {
   if (!contentType.includes('text/html')) return response;
 
   const pathname = new URL(context.request.url).pathname.replace(/\/$/, '') || '/';
-  const needsCurrency = currencyPaths.has(pathname);
-  const needsBulkImport = pathname === '/profit-audit' || pathname === '/profit-audit.html';
-  const needsEngagement = engagementPaths.has(pathname);
-  const shouldInjectAds = !utilityPaths.has(pathname);
+  const isErrorResponse = response.status >= 400;
+  const needsCurrency = !isErrorResponse && currencyPaths.has(pathname);
+  const needsBulkImport = !isErrorResponse && (pathname === '/profit-audit' || pathname === '/profit-audit.html');
+  const needsEngagement = !isErrorResponse && engagementPaths.has(pathname);
+  const shouldInjectAds = !isErrorResponse && !utilityPaths.has(pathname);
 
   let html = await response.text();
   if (html.includes('</head>')) {
-    const tags = metadataFor(html, pathname);
+    const tags = metadataFor(html, pathname, isErrorResponse);
     if (shouldInjectAds && !html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249')) tags.push(ADSENSE_SCRIPT);
     if (shouldInjectAds && !html.includes('name="google-adsense-account"')) tags.push(ADSENSE_META);
     if (!html.includes('/global-ux.css')) tags.push(GLOBAL_UX);
