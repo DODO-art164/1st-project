@@ -1,7 +1,7 @@
 const ADSENSE_SCRIPT = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249" crossorigin="anonymous"></script>';
 const ADSENSE_META = '<meta name="google-adsense-account" content="ca-pub-1158392779506249">';
 const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=3">';
-const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=2" defer></script>';
+const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=3" defer></script>';
 const GLOBAL_CURRENCY = '<script src="/currency.js?v=4"></script>';
 const BULK_IMPORT_SCRIPT = '<script src="/bulk-import.js?v=1" defer></script>';
 const ENGAGEMENT_CSS = '<link rel="stylesheet" href="/engagement.css?v=1">';
@@ -24,6 +24,14 @@ const engagementPaths = new Set([
 ]);
 
 const utilityPaths = new Set(['/404.html', '/offline.html']);
+const nonAdPaths = new Set([
+  ...utilityPaths,
+  '/privacy', '/privacy.html',
+  '/terms', '/terms.html',
+  '/contact', '/contact.html',
+  '/about', '/about.html',
+  '/seller-profit-audit', '/seller-profit-audit.html'
+]);
 
 function textContent(value = '') {
   return value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -83,7 +91,7 @@ export async function onRequest(context) {
   const needsCurrency = !isErrorResponse && currencyPaths.has(pathname);
   const needsBulkImport = !isErrorResponse && (pathname === '/profit-audit' || pathname === '/profit-audit.html');
   const needsEngagement = !isErrorResponse && engagementPaths.has(pathname);
-  const shouldInjectAds = !isErrorResponse && !utilityPaths.has(pathname);
+  const shouldInjectAds = !isErrorResponse && !nonAdPaths.has(pathname);
 
   let html = await response.text();
   if (html.includes('</head>')) {
