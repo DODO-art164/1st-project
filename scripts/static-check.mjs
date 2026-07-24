@@ -84,14 +84,17 @@ for (const file of requiredCurrencyScripts) {
 
 if (existsSync(join(root, 'currency.js'))) {
   const currencySource = read('currency.js');
-  if (/observe\s*\(\s*document\.body/i.test(currencySource)) {
-    report('currency.js: document.body 전체를 감시하는 MutationObserver가 다시 추가되었습니다.');
+  if (currencySource.includes('MutationObserver')) {
+    report('currency.js: 통화 변경 런타임에 MutationObserver를 사용하면 안 됩니다.');
   }
   if (/characterData\s*:\s*true/i.test(currencySource)) {
     report('currency.js: 모든 텍스트 변경을 감시하는 characterData observer가 다시 추가되었습니다.');
   }
   if (/dispatchEvent\s*\(\s*new Event\s*\(\s*["']input/i.test(currencySource)) {
     report('currency.js: 통화 변경 시 입력 이벤트를 대량 발생시키는 코드가 다시 추가되었습니다.');
+  }
+  if (!currencySource.includes('formatterCache')) {
+    warnings.push('currency.js: Intl.NumberFormat 캐시가 없습니다.');
   }
 } else {
   report('currency.js가 없습니다.');
@@ -105,6 +108,26 @@ if (existsSync(join(root, 'bulk-profit.js'))) {
   if (!bulkSource.includes('requestAnimationFrame')) {
     warnings.push('bulk-profit.js: 입력 계산 프레임 조절 코드가 없습니다.');
   }
+  if (!bulkSource.includes('fashionops:currencychange')) {
+    report('bulk-profit.js: 통화 변경 후 결과 갱신 이벤트가 없습니다.');
+  }
+}
+
+for (const runtime of ['global-ux.js', 'bulk-import.js']) {
+  if (!existsSync(join(root, runtime))) report(`${runtime}가 없습니다.`);
+}
+
+const middlewarePath = join(root, 'functions/_middleware.js');
+if (!existsSync(middlewarePath)) {
+  report('Cloudflare 미들웨어가 없습니다.');
+} else {
+  const middleware = read('functions/_middleware.js');
+  if (!middleware.includes('/currency.js?v=4')) report('미들웨어가 최신 통화 런타임을 로드하지 않습니다.');
+  if (!middleware.includes('/global-ux.js')) report('미들웨어가 접근성 툴팁 런타임을 로드하지 않습니다.');
+  if (!middleware.includes('/bulk-import.js')) report('미들웨어가 국제 CSV 가져오기 런타임을 로드하지 않습니다.');
+  if (!middleware.includes("pathname === '/profit-audit.html'")) {
+    report('bulk-import.js가 대량분석 페이지에만 제한되어 있지 않습니다.');
+  }
 }
 
 const koreanTemplatePath = join(root, 'profit-audit-template.csv');
@@ -113,7 +136,8 @@ if (!existsSync(koreanTemplatePath)) {
 } else {
   const koreanTemplate = readFileSync(koreanTemplatePath, 'utf8');
   if (!koreanTemplate.startsWith('\ufeff')) report('한국어 CSV 양식에 Excel 호환 UTF-8 BOM이 없습니다.');
-  if (!koreanTemplate.includes('상품명,판매가,원가')) report('한국어 CSV 양식 헤더가 올바르지 않습니다.');
+  if (!koreanTemplate.startsWith('\ufeff통화,상품명,판매가,원가')) report('한국어 CSV 양식의 통화·상품 헤더가 올바르지 않습니다.');
+  if (!koreanTemplate.includes('\nKRW,')) report('한국어 CSV 양식에 KRW 통화 코드가 없습니다.');
 }
 
 const englishTemplatePath = join(root, 'profit-audit-template-en.csv');
