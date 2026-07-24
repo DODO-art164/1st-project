@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>커뮤니티 관리 | FashionOps</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="canonical" href="https://1st-project-3aj.pages.dev/community-admin.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="community.css?v=1">
+</head>
+<body data-community-page="admin">
+  <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">F</span><span>FashionOps</span></a><nav class="main-nav"><a href="community.html">커뮤니티</a><a class="nav-cta" href="resources.html">전체도구</a></nav></div></header>
+  <main>
+    <div class="community-form-shell">
+      <article class="community-form-card">
+        <header class="community-form-head"><span class="section-kicker">MODERATION</span><h1>커뮤니티 관리</h1><p>검수 대기, 신고 누적과 숨김 콘텐츠를 처리합니다. 토큰은 현재 탭의 sessionStorage에만 보관됩니다.</p></header>
+        <form class="community-admin-login" id="community-admin-login"><input id="community-admin-token" type="password" autocomplete="off" placeholder="COMMUNITY_ADMIN_TOKEN"><button class="button primary" type="submit">불러오기</button></form>
+        <div class="community-admin-grid" id="community-admin-content" style="margin-top:24px"><div class="community-empty">관리자 토큰을 입력하세요.</div></div>
+      </article>
+    </div>
+  </main>
+  <script src="community.js?v=1" defer></script>
+</body>
+</html>
