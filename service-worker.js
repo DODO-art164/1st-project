@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fashionops-shell-v2';
+const CACHE_NAME = 'fashionops-shell-v3';
 const CORE_ASSETS = [
   '/',
   '/offline.html',
@@ -22,12 +22,30 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+    if (self.registration.navigationPreload) await self.registration.navigationPreload.enable();
+    await self.clients.claim();
+  })());
 });
+
+async function navigationResponse(event, request, url) {
+  try {
+    const response = await event.preloadResponse || await fetch(request);
+    if (response.ok && !url.search) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone()).catch(() => {});
+    }
+    return response;
+  } catch (error) {
+    if (!url.search) {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+    }
+    return caches.match('/offline.html');
+  }
+}
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
@@ -36,17 +54,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(async () => (await caches.match(request)) || caches.match('/offline.html'))
-    );
+    event.respondWith(navigationResponse(event, request, url));
     return;
   }
 
@@ -56,7 +64,7 @@ self.addEventListener('fetch', (event) => {
         const refreshed = fetch(request).then((response) => {
           if (response.ok) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)).catch(() => {});
           }
           return response;
         }).catch(() => cached);
