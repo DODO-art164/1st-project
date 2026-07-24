@@ -111,6 +111,8 @@ if (existsSync(join(root, 'engagement.js'))) {
   if (!engagement.includes('navigator.serviceWorker.register')) report('engagement.js: 서비스 워커 등록 코드가 없습니다.');
   if (!engagement.includes('beforeinstallprompt')) warnings.push('engagement.js: 설치 유도 이벤트가 없습니다.');
   if (!engagement.includes('navigator.share')) report('engagement.js: 공유 링크 기능이 없습니다.');
+  if (!engagement.includes("bulk: { label: '상품별 대량 손익'")) report('engagement.js: 대량분석 재방문 동선이 없습니다.');
+  if (!engagement.includes("weekly: { label: '주간 운영 점검'")) report('engagement.js: 주간점검 재방문 동선이 없습니다.');
 }
 
 if (existsSync(join(root, 'service-worker.js'))) {
@@ -135,9 +137,10 @@ if (!existsSync(middlewarePath)) {
   if (!middleware.includes('/global-ux.js')) report('미들웨어가 접근성 툴팁 런타임을 로드하지 않습니다.');
   if (!middleware.includes('/bulk-import.js')) report('미들웨어가 국제 CSV 가져오기 런타임을 로드하지 않습니다.');
   if (!middleware.includes("pathname === '/profit-audit.html'")) report('bulk-import.js가 대량분석 페이지에만 제한되어 있지 않습니다.');
-  if (!middleware.includes('/engagement.js?v=1')) report('미들웨어가 저장·공유·설치 런타임을 로드하지 않습니다.');
+  if (!middleware.includes('/engagement.js?v=2')) report('미들웨어가 최신 저장·공유·설치 런타임을 로드하지 않습니다.');
   if (!middleware.includes('BreadcrumbList')) report('미들웨어에 브레드크럼 구조화 데이터가 없습니다.');
   if (!middleware.includes('twitter:card')) report('미들웨어에 공유용 메타태그가 없습니다.');
+  if (!middleware.includes('utilityPaths') || !middleware.includes('shouldInjectAds')) report('404·오프라인 페이지 광고 제외 처리가 없습니다.');
 }
 
 const koreanTemplatePath = join(root, 'profit-audit-template.csv');
