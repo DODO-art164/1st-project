@@ -1,14 +1,10 @@
-const CACHE_NAME = 'fashionops-shell-v4';
+const CACHE_NAME = 'fashionops-shell-v5';
 const CORE_ASSETS = [
   '/',
   '/offline.html',
   '/styles.css',
   '/ux.css',
-  '/global-ux.css?v=3',
-  '/global-ux.js?v=3',
-  '/engagement.css?v=1',
-  '/engagement.js?v=2',
-  '/currency.js?v=4',
+  '/global-ux.css?v=4',
   '/favicon.svg',
   '/manifest.webmanifest'
 ];
@@ -38,7 +34,7 @@ async function navigationResponse(event, request, url) {
       cache.put(request, response.clone()).catch(() => {});
     }
     return response;
-  } catch (error) {
+  } catch {
     if (!url.search) {
       const cached = await caches.match(request);
       if (cached) return cached;
@@ -63,8 +59,9 @@ self.addEventListener('fetch', (event) => {
       caches.match(request).then((cached) => {
         const refreshed = fetch(request).then((response) => {
           if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)).catch(() => {});
+            caches.open(CACHE_NAME)
+              .then((cache) => cache.put(request, response.clone()))
+              .catch(() => {});
           }
           return response;
         }).catch(() => cached);
