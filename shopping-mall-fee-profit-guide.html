@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>쇼핑몰 수수료 계산법 | 정산액과 실제 순이익 구하기 | FashionOps</title>
+  <meta name="description" content="온라인 쇼핑몰의 플랫폼 수수료, 결제 수수료, 광고비, 배송비와 반품 손실을 반영해 실제 정산액과 순이익을 계산하는 방법을 설명합니다.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://1st-project-3aj.pages.dev/shopping-mall-fee-profit-guide.html">
+  <link rel="icon" href="favicon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .article-wrap{padding:34px 0 84px}.article-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:28px;align-items:start}.article-card,.article-side{padding:28px;border:1px solid var(--line);border-radius:20px;background:var(--card)}.article-card h1{margin:8px 0 15px;font-size:clamp(34px,5vw,52px);line-height:1.15;letter-spacing:-.055em}.article-card h2{margin:42px 0 12px;font-size:27px;line-height:1.3;letter-spacing:-.04em}.article-card h3{margin:27px 0 8px;font-size:19px}.article-card p,.article-card li{color:var(--muted);line-height:1.85}.article-card strong{color:var(--text)}.formula{margin:20px 0;padding:19px;border:1px solid #bcd8ce;border-radius:15px;background:var(--accent-soft);font-weight:800;line-height:1.7}.example{margin:20px 0;padding:20px;border:1px solid var(--line);border-radius:15px;background:var(--card-2)}.example b{display:block;margin-bottom:8px}.article-actions{display:flex;gap:10px;flex-wrap:wrap;margin:28px 0}.article-side{position:sticky;top:88px}.article-side b{display:block;margin-bottom:10px}.article-side a{display:block;padding:10px 0;border-bottom:1px solid var(--line);color:var(--muted);font-size:13px}.article-side a:last-child{border-bottom:0}.checklist{padding-left:20px}.faq details{padding:15px 0;border-bottom:1px solid var(--line)}.faq summary{cursor:pointer;font-weight:800}.legal-note{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);font-size:13px}@media(max-width:900px){.article-layout{grid-template-columns:1fr}.article-side{position:static;order:-1}}@media(max-width:620px){.article-card,.article-side{padding:21px}.article-actions{display:grid}.article-actions .button{width:100%}}
+  </style>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Article","headline":"쇼핑몰 수수료 계산법: 정산액과 실제 순이익 구하기","description":"플랫폼 수수료와 결제 수수료뿐 아니라 광고비, 배송비와 반품 손실을 반영해 온라인 쇼핑몰 실제 순이익을 계산하는 방법","inLanguage":"ko-KR","author":{"@type":"Organization","name":"FashionOps"},"publisher":{"@type":"Organization","name":"FashionOps"},"mainEntityOfPage":"https://1st-project-3aj.pages.dev/shopping-mall-fee-profit-guide.html","datePublished":"2026-07-24","dateModified":"2026-07-24"}
+  </script>
+</head>
+<body>
+  <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">F</span><span>FashionOps</span></a><nav class="main-nav" aria-label="주요 메뉴"><a href="index.html#tools">계산기</a><a href="profit-audit.html">대량 분석</a><a href="resources.html">전체 도구</a></nav></div></header>
+  <main class="article-wrap">
+    <div class="container article-layout">
+      <article class="article-card">
+        <a class="back-link" href="resources.html">← 전체 도구와 가이드</a>
+        <span class="section-kicker">온라인 쇼핑몰 손익 가이드</span>
+        <h1>쇼핑몰 수수료를 빼고<br>실제로 얼마가 남을까?</h1>
+        <p>온라인 쇼핑몰의 수익을 계산할 때 가장 흔한 실수는 판매가에서 상품 원가와 플랫폼 수수료만 빼는 것입니다. 실제 정산액에는 결제 수수료, 판매자 부담 쿠폰, 광고비, 배송·포장비, 반품 비용 등이 영향을 줍니다. 플랫폼이 입금한 금액도 곧바로 순이익은 아닙니다. 정산액과 사업 이익을 구분해야 가격과 광고 결정을 제대로 할 수 있습니다.</p>
+
+        <div class="article-actions"><a class="button primary" href="marketplace-profit-calculator.html">플랫폼 판매 수익 계산</a><a class="button secondary" href="index.html#profit-calculator">상품 순이익 계산</a></div>
+
+        <h2 id="difference">정산액과 순이익은 무엇이 다른가요?</h2>
+        <p><strong>정산액</strong>은 판매 채널이 주문금액에서 채널이 공제하는 비용을 빼고 판매자에게 지급하는 금액입니다. 반면 <strong>순이익</strong>은 정산액에서 상품 원가, 광고비, 배송비, 포장비, 반품 손실과 운영에 필요한 비용까지 뺀 뒤 남는 금액입니다.</p>
+        <div class="formula">예상 정산액 = 실제 결제금액 − 플랫폼 수수료 − 결제 수수료 − 채널에서 직접 공제하는 비용<br>예상 순이익 = 예상 정산액 − 상품 원가 − 광고비 − 배송·포장비 − 반품 손실</div>
+        <p>광고비가 채널 정산서에서 직접 빠지지 않고 카드나 별도 계좌에서 결제된다면, 정산액에는 광고비가 반영되지 않을 수 있습니다. 따라서 정산액이 많아 보여도 광고비까지 합치면 적자일 수 있습니다.</p>
+
+        <h2 id="fees">계산할 때 구분해야 하는 비용</h2>
+        <h3>플랫폼 판매 수수료</h3>
+        <p>상품 판매를 중개한 대가로 발생하는 비용입니다. 카테고리, 판매 방식, 프로모션 참여 조건에 따라 달라질 수 있으므로 인터넷에 나온 일반 수치보다 자신의 최신 계약 화면과 정산 명세서를 우선해야 합니다.</p>
+        <h3>결제 수수료</h3>
+        <p>카드, 간편결제 등 결제 처리 과정에서 발생하는 비용입니다. 플랫폼 판매 수수료와 합쳐 표시되는 채널도 있고 별도로 표시되는 채널도 있으므로 중복 입력하지 않도록 확인합니다.</p>
+        <h3>쿠폰과 할인 분담금</h3>
+        <p>고객이 받은 할인액 전부를 플랫폼이 부담하는 것은 아닙니다. 판매자 부담분이 있다면 실제 결제금액 또는 정산액에 반영해야 합니다. 정상 판매가가 아니라 고객이 실제로 결제한 금액을 기준으로 수익을 계산하는 것이 안전합니다.</p>
+        <h3>광고비</h3>
+        <p>상품 매출을 만들기 위해 사용한 검색광고, 디스플레이광고, 리타게팅 비용입니다. 상품별 광고비를 정확히 나누기 어렵다면 같은 기간 전체 매출 대비 광고비 비율을 사용해 추정할 수 있습니다.</p>
+        <h3>배송·포장비</h3>
+        <p>택배비, 포장재, 합포장 추가비, 도서산간 비용과 무료배송 판매자 부담분을 포함합니다. 고객이 배송비를 결제한 경우에도 실제 택배비와 차이가 있는지 확인해야 합니다.</p>
+        <h3>반품과 교환 손실</h3>
+        <p>회수 배송비, 재배송비, 검수·재포장 시간, 훼손이나 시즌 경과에 따른 가치 하락이 포함될 수 있습니다. 반품된 상품을 정상가로 다시 판매할 수 있다는 가정이 항상 맞는 것은 아닙니다.</p>
+
+        <h2 id="example">판매가 79,000원 상품 계산 예시</h2>
+        <div class="example"><b>설명을 위한 예시 조건</b><p>판매가 79,000원, 상품 원가 30,000원, 플랫폼·결제 수수료 합계 13.3%, 광고비율 12%, 배송·포장비 4,500원, 예상 반품률 8%를 가정합니다. 이 숫자는 특정 플랫폼의 공식 요율이나 권장값이 아니며 계산 구조를 이해하기 위한 예시입니다.</p></div>
+        <p>먼저 반품을 고려한 예상 매출을 구하고, 그 매출을 기준으로 수수료를 계산합니다. 광고비는 같은 기간 전체 판매가 대비 비율로 추정할 수 있습니다. 여기에 상품 원가, 배송·포장비와 반품 1건당 추가 손실을 차감하면 판매 1건의 기대 순이익이 나옵니다.</p>
+        <p>중요한 것은 계산 결과 하나보다 입력 조건을 바꿔 비교하는 것입니다. 할인율을 높였을 때, 광고비율이 상승했을 때, 반품률이 두 배가 됐을 때도 이익이 남는지 확인하면 가격의 안전 여유를 판단할 수 있습니다.</p>
+
+        <h2 id="mistakes">수수료 계산에서 자주 생기는 오류</h2>
+        <ul class="checklist">
+          <li><strong>정상가로 계산:</strong> 쿠폰과 즉시할인을 적용한 실제 결제금액 대신 정상가를 사용합니다.</li>
+          <li><strong>수수료 중복:</strong> 통합 수수료에 결제 수수료가 포함돼 있는데 다시 더합니다.</li>
+          <li><strong>광고비 누락:</strong> 정산서 밖에서 결제된 광고비를 비용에서 제외합니다.</li>
+          <li><strong>무료배송 오해:</strong> 고객이 무료로 받은 배송을 사업자 비용에서도 무료라고 생각합니다.</li>
+          <li><strong>반품률 무시:</strong> 매출 취소뿐 아니라 회수·검수·상품 가치 하락을 빠뜨립니다.</li>
+          <li><strong>부가세 기준 혼합:</strong> 부가세 포함 금액과 제외 금액을 한 계산 안에서 섞습니다.</li>
+        </ul>
+
+        <h2 id="workflow">실무에서는 이 순서로 확인하세요</h2>
+        <ol class="checklist">
+          <li>같은 기간의 주문·취소·반품 데이터를 모읍니다.</li>
+          <li>정상가가 아닌 실제 결제금액을 확인합니다.</li>
+          <li>플랫폼 정산서에서 수수료 항목이 합산인지 분리인지 확인합니다.</li>
+          <li>같은 기간 광고비와 배송·포장비를 더합니다.</li>
+          <li>상품 원가와 반품 손실을 포함해 판매 1건당 순이익을 계산합니다.</li>
+          <li>상품이 여러 개라면 월 판매량을 곱해 이익 기여도를 비교합니다.</li>
+        </ol>
+        <p>상품 수가 많을수록 매출순 정렬보다 순이익 기여도순 정렬이 중요합니다. 매출이 큰 상품이 광고비와 반품 때문에 실제 이익은 적을 수 있기 때문입니다.</p>
+        <div class="article-actions"><a class="button primary" href="profit-audit.html">CSV로 상품별 비교</a><a class="button secondary" href="weekly-profit-check.html">주간 점검에 적용</a></div>
+
+        <section class="faq">
+          <h2 id="faq">자주 묻는 질문</h2>
+          <details><summary>플랫폼 수수료율은 어디서 확인해야 하나요?</summary><p>자신이 이용하는 판매자센터의 최신 계약·수수료 안내와 실제 정산 명세서를 우선하세요. 카테고리와 프로모션 조건에 따라 달라질 수 있어 일반적인 숫자를 그대로 적용하면 오차가 생길 수 있습니다.</p></details>
+          <details><summary>광고비를 상품별로 나누기 어렵다면 어떻게 하나요?</summary><p>같은 기간 전체 매출 대비 광고비 비율을 먼저 사용하고, 가능하다면 캠페인이나 상품군별 광고비로 점차 세분화하세요.</p></details>
+          <details><summary>정산액이 늘었는데 현금이 부족한 이유는 무엇인가요?</summary><p>광고비 선결제, 추가 발주, 반품 환불, 부가세와 운영비 때문에 정산액 증가가 현금 증가로 바로 이어지지 않을 수 있습니다. 재고와 현금흐름을 함께 확인해야 합니다.</p></details>
+        </section>
+        <p class="legal-note">이 가이드는 일반적인 사업 판단을 위한 설명입니다. 실제 세금, 부가세 처리와 채널별 계약 조건은 회계·세무 전문가 및 해당 플랫폼의 최신 안내를 확인하세요.</p>
+      </article>
+
+      <aside class="article-side" aria-label="페이지 목차와 관련 도구">
+        <b>이 페이지에서 확인할 내용</b>
+        <a href="#difference">정산액과 순이익 차이</a><a href="#fees">비용 항목 구분</a><a href="#example">계산 예시</a><a href="#mistakes">자주 생기는 오류</a><a href="#workflow">실무 확인 순서</a><a href="#faq">자주 묻는 질문</a>
+        <b style="margin-top:22px">바로 계산하기</b>
+        <a href="marketplace-profit-calculator.html">플랫폼 판매 수익 계산기</a><a href="index.html#profit-calculator">실제 순이익 계산기</a><a href="profit-audit.html">상품별 대량 손익 분석</a>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 FashionOps</span><span><a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a></span></div></footer>
+</body>
+</html>
