@@ -1,21 +1,38 @@
-const fmtMoney = (value) => `${Math.round(value).toLocaleString('ko-KR')}원`;
+const fmtMoney = (value) => window.FashionOpsCurrency?.format?.(value)
+  || `${Math.round(value).toLocaleString('ko-KR')}원`;
 const get = (id) => Math.max(Number(document.getElementById(id)?.value) || 0, 0);
+const currentCurrency = () => window.FashionOpsCurrency?.getCurrency?.() || 'KRW';
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
 const set = (id, value) => {
   const element = document.getElementById(id);
   if (element) element.textContent = value;
 };
+
 const diagnose = (type, text) => {
   const box = document.getElementById('tool-diagnosis');
   if (!box) return;
   box.className = `diagnosis ${type || ''}`;
   box.innerHTML = `<span>진단</span><p>${text}</p>`;
 };
+
 const badge = (type, text) => {
   const element = document.getElementById('tool-badge');
   if (!element) return;
   element.className = `result-badge ${type}`;
   element.textContent = text;
 };
+
+function moneyIncrement() {
+  if (currentCurrency() === 'KRW') return 1000;
+  if (currentCurrency() === 'JPY') return 100;
+  return 0.01;
+}
+
+function roundMoneyUp(value) {
+  const increment = moneyIncrement();
+  return Math.ceil((value - Number.EPSILON) / increment) * increment;
+}
 
 function calcStartup() {
   const production = get('startup-production');
@@ -37,15 +54,18 @@ function calcStartup() {
   set('startup-operating', fmtMoney(monthly * reserveMonths));
   set('startup-buffer', fmtMoney(buffer));
 
-  if (total < 3000000) {
-    badge('warning', '초소형 테스트형');
-    diagnose('warning', '가능한 자본은 작지만 생산 수량과 촬영·광고비가 매우 제한적입니다. 첫 상품 수를 줄이고 예약판매나 소량 테스트를 고려하세요.');
-  } else if (total < 10000000) {
-    badge('good', '소규모 현실형');
-    diagnose('good', '소규모 브랜드를 검증하기에 비교적 현실적인 범위입니다. 운영 예비비를 생산비와 분리해 보유하세요.');
+  if (total <= 0) {
+    badge('neutral', '비용 입력 필요');
+    diagnose('neutral', '생산·콘텐츠·마케팅과 운영비를 입력하면 필요한 초기 현금을 계산합니다.');
+  } else if (reserveMonths < 2 || contingency < 0.1) {
+    badge('warning', '운영 여유 부족');
+    diagnose('warning', '운영비 확보 기간이 2개월 미만이거나 예비비가 10% 미만입니다. 생산 지연과 추가 비용을 버틸 현금을 더 확보하세요.');
+  } else if (production > total * 0.65) {
+    badge('warning', '재고 투자 비중 높음');
+    diagnose('warning', '초기 자금의 대부분이 생산비에 묶입니다. 첫 생산 수량을 줄이고 촬영·마케팅·운영자금을 별도로 남겨두세요.');
   } else {
-    badge('neutral', '본격 운영형');
-    diagnose('neutral', '초기 투자가 큰 편입니다. 생산비를 한 번에 집행하기 전에 샘플·콘텐츠·수요 검증 단계를 나누는 것이 안전합니다.');
+    badge('good', '기본 완충자금 확보');
+    diagnose('good', '운영기간과 예비비가 포함된 계획입니다. 실제 집행 전에는 확정 견적과 최소 생산수량을 다시 확인하세요.');
   }
 }
 
@@ -64,22 +84,25 @@ function calcClothingCost() {
   const accountingCost = variable + developmentPerUnit;
   const sellableRate = 1 - defect;
   const effectiveCost = sellableRate > 0 ? accountingCost / sellableRate : 0;
-  const suggested = Math.ceil((effectiveCost / 0.35) / 1000) * 1000;
+  const suggested = roundMoneyUp(effectiveCost / 0.35);
 
   set('cost-unit', fmtMoney(accountingCost));
   set('cost-effective', fmtMoney(effectiveCost));
   set('cost-total', fmtMoney(accountingCost * qty));
   set('cost-price', fmtMoney(suggested));
 
-  if (defect >= 0.08) {
+  if (variable <= 0 && development <= 0) {
+    badge('neutral', '원가 입력 필요');
+    diagnose('neutral', '원단·봉제·부자재와 개발비를 입력하면 판매 가능한 제품 1개의 실질 원가를 계산합니다.');
+  } else if (defect >= 0.08) {
     badge('danger', '불량률 높음');
     diagnose('danger', '예상 불량률이 높아 실질 원가가 크게 상승합니다. 생산처 품질 기준과 검수 비용을 먼저 점검하세요.');
   } else if (developmentPerUnit > variable * 0.3) {
     badge('warning', '소량 생산 영향 큼');
-    diagnose('warning', '샘플·패턴비의 개당 배부액이 큽니다. 첫 생산에서 정상적일 수 있지만 재생산 시 원가가 낮아지는지 구분해 보세요.');
+    diagnose('warning', '샘플·패턴비의 개당 배부액이 큽니다. 첫 생산과 재생산의 원가를 따로 비교하세요.');
   } else {
     badge('good', '원가 구조 확인');
-    diagnose('good', '불량률과 개발비까지 포함한 실질 원가입니다. 판매가 결정 시 수수료·광고비·반품비도 추가로 반영하세요.');
+    diagnose('good', '불량률과 개발비까지 포함한 실질 원가입니다. 판매가에는 수수료·광고비·반품비를 추가로 반영하세요.');
   }
 }
 
@@ -96,19 +119,24 @@ function calcDiscount() {
   const profit = salePrice - cost - fee - ad - shipping;
   const margin = salePrice > 0 ? profit / salePrice * 100 : 0;
   const denominator = price * (1 - feeRate - adRate);
-  const maxDiscount = denominator > 0 ? Math.max(0, Math.min(1 - (cost + shipping) / denominator, 1)) * 100 : 0;
+  const maxDiscount = denominator > 0
+    ? Math.max(0, Math.min(1 - (cost + shipping) / denominator, 1)) * 100
+    : 0;
 
-  set('discount-sale-price', fmtMoney(salePrice));
-  set('discount-profit', fmtMoney(profit));
-  set('discount-margin', `${margin.toFixed(1)}%`);
-  set('discount-max', `${maxDiscount.toFixed(1)}%`);
+  set('discount-sale-price', price > 0 ? fmtMoney(salePrice) : '-');
+  set('discount-profit', price > 0 ? fmtMoney(profit) : '-');
+  set('discount-margin', price > 0 ? `${margin.toFixed(1)}%` : '-');
+  set('discount-max', price > 0 ? `${maxDiscount.toFixed(1)}%` : '-');
 
-  if (profit < 0) {
+  if (price <= 0) {
+    badge('neutral', '판매가 입력 필요');
+    diagnose('neutral', '정상 판매가를 입력하면 할인 후 순이익과 이론적 최대 할인율을 계산합니다.');
+  } else if (profit < 0) {
     badge('danger', '할인 시 적자');
     diagnose('danger', `현재 할인율에서는 1건당 약 ${fmtMoney(Math.abs(profit))} 손실입니다. 할인율을 낮추거나 광고비를 줄이세요.`);
   } else if (margin < 10) {
     badge('warning', '이익 여유 부족');
-    diagnose('warning', '이익은 남지만 쿠폰 중복·반품이 발생하면 적자로 바뀔 수 있습니다. 안전 할인율보다 낮게 운영하는 것이 좋습니다.');
+    diagnose('warning', '이익은 남지만 쿠폰 중복·반품이 발생하면 적자로 바뀔 수 있습니다. 이론적 최대 할인율보다 낮게 운영하세요.');
   } else {
     badge('good', '할인 가능');
     diagnose('good', '현재 입력값 기준으로 할인 후에도 이익이 남습니다. 실제 쿠폰·적립금·반품 비용까지 포함해 최종 확인하세요.');
@@ -128,16 +156,19 @@ function calcRoas() {
   const breakEven = contributionRate > 0 ? 100 / contributionRate : 0;
 
   set('roas-current', ad > 0 ? `${Math.round(roas)}%` : '-');
-  set('roas-profit', fmtMoney(adProfit));
+  set('roas-profit', revenue > 0 ? fmtMoney(adProfit) : '-');
   set('roas-break-even', breakEven > 0 ? `${Math.ceil(breakEven)}%` : '계산 불가');
-  set('roas-max-ad', fmtMoney(Math.max(grossProfit - extra, 0)));
+  set('roas-max-ad', revenue > 0 ? fmtMoney(Math.max(grossProfit - extra, 0)) : '-');
 
-  if (contributionRate <= 0) {
+  if (revenue <= 0) {
+    badge('neutral', '매출 입력 필요');
+    diagnose('neutral', '광고로 발생한 매출과 같은 기간의 광고비를 입력하면 광고 수익성을 계산합니다.');
+  } else if (contributionRate <= 0) {
     badge('danger', '비용 구조 확인');
-    diagnose('danger', '매출총이익률보다 기타 변동비율이 높거나 같습니다. 광고 효율을 보기 전에 상품 원가와 변동비 입력값을 확인하세요.');
+    diagnose('danger', '매출총이익률보다 기타 변동비율이 높거나 같습니다. 광고 효율보다 상품 원가와 변동비 입력값을 먼저 확인하세요.');
   } else if (ad <= 0) {
     badge('neutral', '광고비 입력 필요');
-    diagnose('neutral', '현재 ROAS를 계산하려면 같은 기간의 광고비를 입력하세요. 손익분기 ROAS와 감당 가능한 최대 광고비는 입력한 마진 구조를 기준으로 표시됩니다.');
+    diagnose('neutral', '현재 ROAS를 계산하려면 같은 기간의 광고비를 입력하세요.');
   } else if (adProfit < 0) {
     badge('danger', '광고 적자');
     diagnose('danger', '현재 ROAS가 손익분기 ROAS보다 낮습니다. 매출 확대보다 소재·타깃·상품 마진 개선이 우선입니다.');
@@ -146,7 +177,7 @@ function calcRoas() {
     diagnose('warning', '광고 이익은 남지만 효율이 조금만 떨어져도 적자로 전환될 수 있습니다. 예산 증액은 단계적으로 진행하세요.');
   } else {
     badge('good', '광고 수익 양호');
-    diagnose('good', '현재 가정에서는 광고비를 제외하고도 이익이 남습니다. 채널별·상품별로 같은 계산을 나눠 확인하세요.');
+    diagnose('good', '현재 가정에서는 광고비를 제외하고도 이익이 남습니다. 채널별·상품별로 나눠 확인하세요.');
   }
 }
 
@@ -168,12 +199,15 @@ function calcMarketplace() {
   const margin = price > 0 ? profit / price * 100 : 0;
   const feeAmount = fees + adCost;
 
-  set('market-profit', fmtMoney(profit));
-  set('market-payout', fmtMoney(payout));
-  set('market-fees', fmtMoney(feeAmount));
-  set('market-margin', `${margin.toFixed(1)}%`);
+  set('market-profit', price > 0 ? fmtMoney(profit) : '-');
+  set('market-payout', price > 0 ? fmtMoney(payout) : '-');
+  set('market-fees', price > 0 ? fmtMoney(feeAmount) : '-');
+  set('market-margin', price > 0 ? `${margin.toFixed(1)}%` : '-');
 
-  if (profit < 0) {
+  if (price <= 0) {
+    badge('neutral', '판매가 입력 필요');
+    diagnose('neutral', '판매가와 실제 채널 수수료를 입력하면 예상 정산액과 순이익을 계산합니다.');
+  } else if (profit < 0) {
     badge('danger', '채널 판매 적자');
     diagnose('danger', '수수료와 광고비를 반영하면 판매할수록 손실이 발생합니다. 채널 전용 판매가 또는 수수료가 낮은 채널을 검토하세요.');
   } else if (margin < 12) {
@@ -200,36 +234,57 @@ const form = document.querySelector('[data-calculator-form]');
 if (calculator && form) {
   const inputs = [...form.querySelectorAll('input[id]')];
   const defaults = Object.fromEntries(inputs.map((input) => [input.id, input.defaultValue]));
-  const storageKey = `fashionops-${tool}-calculator-values-v1`;
+  const storageKey = `fashionops-${tool}-calculator-values-v2`;
+  const legacyKey = `fashionops-${tool}-calculator-values-v1`;
   const resultPanel = document.querySelector('.result-panel');
+  let calculationFrame = 0;
+  let saveTimer = 0;
   resultPanel?.setAttribute('aria-live', 'polite');
 
   try {
-    const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    const saved = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem(legacyKey) || '{}');
     inputs.forEach((input) => {
       if (Object.prototype.hasOwnProperty.call(saved, input.id)) input.value = saved[input.id];
     });
   } catch (error) {
-    try { localStorage.removeItem(storageKey); } catch (storageError) {}
+    try {
+      localStorage.removeItem(storageKey);
+      localStorage.removeItem(legacyKey);
+    } catch (storageError) {}
   }
 
   function saveValues() {
-    try {
-      const values = Object.fromEntries(inputs.map((input) => [input.id, input.value]));
-      localStorage.setItem(storageKey, JSON.stringify(values));
-    } catch (error) {}
+    clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(() => {
+      try {
+        const values = Object.fromEntries(inputs.map((input) => [input.id, input.value]));
+        localStorage.setItem(storageKey, JSON.stringify(values));
+      } catch (error) {}
+    }, 180);
+  }
+
+  function scheduleCalculation() {
+    if (calculationFrame) return;
+    calculationFrame = requestAnimationFrame(() => {
+      calculationFrame = 0;
+      calculator();
+    });
   }
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     calculator();
     if (window.matchMedia('(max-width: 900px)').matches) {
-      resultPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      resultPanel?.scrollIntoView({
+        behavior: prefersReducedMotion.matches ? 'auto' : 'smooth',
+        block: 'start'
+      });
     }
   });
 
   inputs.forEach((input) => input.addEventListener('input', () => {
-    calculator();
+    input.setAttribute('aria-invalid', String(!input.validity.valid));
+    scheduleCalculation();
     saveValues();
   }));
 
@@ -238,11 +293,15 @@ if (calculator && form) {
   resetButton.className = 'copy-button';
   resetButton.textContent = '입력값 초기화';
   resetButton.addEventListener('click', () => {
-    inputs.forEach((input) => { input.value = defaults[input.id] ?? input.defaultValue; });
+    inputs.forEach((input) => {
+      input.value = defaults[input.id] ?? input.defaultValue;
+      input.removeAttribute('aria-invalid');
+    });
     saveValues();
     calculator();
   });
   form.appendChild(resetButton);
 
+  window.addEventListener('fashionops:currencychange', calculator);
   calculator();
 }
