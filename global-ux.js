@@ -4,6 +4,23 @@
   let hideTimer = 0;
   const touchLikePointer = window.matchMedia('(hover: none), (pointer: coarse)');
 
+  function markFunctionalZones() {
+    document.querySelector('.site-header')?.classList.add('ad-exclusion-zone');
+    const selectors = [
+      '.workspace-shell',
+      '.calculator-card',
+      '.currency-bar',
+      '.audit-toolbar',
+      '.audit-summary',
+      '.audit-wrap',
+      '.weekly-layout',
+      '[data-calculator-form]'
+    ];
+    selectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((element) => element.classList.add('ad-exclusion-zone'));
+    });
+  }
+
   function ensureTooltip() {
     if (tooltip) return tooltip;
     tooltip = document.createElement('div');
@@ -66,6 +83,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    markFunctionalZones();
     document.querySelectorAll('.tip[data-tip]').forEach((trigger) => {
       if (!trigger.getAttribute('aria-label')) {
         trigger.setAttribute('aria-label', `도움말: ${trigger.dataset.tip}`);
