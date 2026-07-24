@@ -1,6 +1,6 @@
 const ADSENSE_SCRIPT = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249" crossorigin="anonymous"></script>';
 const ADSENSE_META = '<meta name="google-adsense-account" content="ca-pub-1158392779506249">';
-const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=3">';
+const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=4">';
 const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=3" defer></script>';
 const GLOBAL_CURRENCY = '<script src="/currency.js?v=4"></script>';
 const BULK_IMPORT_SCRIPT = '<script src="/bulk-import.js?v=1" defer></script>';
@@ -50,6 +50,7 @@ function metadataFor(html, pathname, isErrorResponse) {
   const canonical = html.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i)?.[1]
     || `${SITE_ORIGIN}${pathname === '/' ? '/' : pathname}`;
   const tags = [];
+
   if (!html.includes('property="og:site_name"')) tags.push('<meta property="og:site_name" content="FashionOps">');
   if (!html.includes('property="og:type"')) tags.push('<meta property="og:type" content="website">');
   if (!html.includes('property="og:title"')) tags.push(`<meta property="og:title" content="${escapeAttribute(title)}">`);
@@ -78,6 +79,7 @@ function metadataFor(html, pathname, isErrorResponse) {
         };
     tags.push(`<script type="application/ld+json" data-fashionops-schema>${JSON.stringify(schema)}</script>`);
   }
+
   return tags;
 }
 
@@ -91,6 +93,7 @@ export async function onRequest(context) {
   const needsCurrency = !isErrorResponse && currencyPaths.has(pathname);
   const needsBulkImport = !isErrorResponse && (pathname === '/profit-audit' || pathname === '/profit-audit.html');
   const needsEngagement = !isErrorResponse && engagementPaths.has(pathname);
+  const needsGlobalUxScript = !isErrorResponse && engagementPaths.has(pathname);
   const shouldInjectAds = !isErrorResponse && !nonAdPaths.has(pathname);
 
   let html = await response.text();
@@ -99,7 +102,7 @@ export async function onRequest(context) {
     if (shouldInjectAds && !html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249')) tags.push(ADSENSE_SCRIPT);
     if (shouldInjectAds && !html.includes('name="google-adsense-account"')) tags.push(ADSENSE_META);
     if (!html.includes('/global-ux.css')) tags.push(GLOBAL_UX);
-    if (!html.includes('/global-ux.js')) tags.push(GLOBAL_UX_SCRIPT);
+    if (needsGlobalUxScript && !html.includes('/global-ux.js')) tags.push(GLOBAL_UX_SCRIPT);
     if (needsCurrency && !html.includes('/currency.js')) tags.push(GLOBAL_CURRENCY);
     if (needsBulkImport && !html.includes('/bulk-import.js')) tags.push(BULK_IMPORT_SCRIPT);
     if (needsEngagement && !html.includes('/engagement.css')) tags.push(ENGAGEMENT_CSS);
