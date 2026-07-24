@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FashionOps 계산 방법론 | 순이익·가격·ROAS·재고 공식</title>
+  <meta name="description" content="FashionOps 계산기가 순이익, 목표 판매가, 손익분기점, ROAS, 플랫폼 정산액과 재고 발주량을 계산하는 공식과 가정을 공개합니다.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://1st-project-3aj.pages.dev/calculation-methodology.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"Article",
+    "headline":"FashionOps 계산 방법론: 순이익·가격·ROAS·재고 공식",
+    "description":"FashionOps의 주요 계산 공식, 반품 처리, 통화 표시, 반올림과 결과 해석 기준",
+    "author":{"@type":"Organization","name":"FashionOps"},
+    "publisher":{"@type":"Organization","name":"FashionOps"},
+    "mainEntityOfPage":"https://1st-project-3aj.pages.dev/calculation-methodology.html",
+    "datePublished":"2026-07-25",
+    "dateModified":"2026-07-25",
+    "inLanguage":"ko-KR"
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#methodology">본문으로 바로 이동</a>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="FashionOps 홈"><span class="brand-mark">F</span><span>FashionOps</span></a>
+      <nav class="main-nav" aria-label="주요 메뉴">
+        <a href="index.html#tools">계산기</a>
+        <a href="profit-audit.html">대량 분석</a>
+        <a class="nav-cta" href="resources.html">전체 도구</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="legal-main" id="methodology">
+    <div class="container">
+      <article class="legal-card">
+        <a class="back-link" href="resources.html">← 전체 도구와 가이드</a>
+        <span class="section-kicker">CALCULATION METHODOLOGY</span>
+        <h1>계산 결과가 만들어지는<br>공식과 가정을 공개합니다.</h1>
+        <p class="legal-meta">최종 검토일: 2026년 7월 25일 · 계산기는 빠른 사업 판단을 위한 추정 도구입니다.</p>
+        <p>FashionOps는 결과 숫자만 보여주는 계산기가 아니라, 사용자가 어떤 비용을 빠뜨렸는지 확인하도록 돕는 운영 도구를 지향합니다. 이 페이지는 각 계산기가 어떤 값을 사용하고 무엇을 제외하는지 공개합니다. 화면의 기본값은 특정 업종의 권장값이 아니라 작동 방식을 보여주기 위한 예시이며, 실제 판단에는 자신의 최신 정산서·광고비·반품 기록·재고 데이터를 입력해야 합니다.</p>
+
+        <h2>1. 모든 계산기에 공통으로 적용하는 원칙</h2>
+        <ul>
+          <li><strong>입력값 우선:</strong> 플랫폼 평균이나 인터넷에 공개된 일반 수수료를 공식값으로 고정하지 않습니다.</li>
+          <li><strong>기대값 방식:</strong> 반품률처럼 미래에 발생할 수 있는 비용은 확률을 곱한 평균 손실로 반영합니다.</li>
+          <li><strong>중복 차감 방지:</strong> 플랫폼 수수료에 결제 수수료가 포함된 경우 사용자가 같은 비용을 두 번 입력하지 않도록 안내합니다.</li>
+          <li><strong>통화 단위 유지:</strong> 환율을 임의로 적용하지 않습니다. USD를 선택하면 모든 금액을 USD 기준으로 입력하고 결과도 USD로 표시합니다.</li>
+          <li><strong>세무 판단 분리:</strong> 부가가치세, 소득세, 법인세와 국가별 회계 처리는 기본 계산에서 제외합니다.</li>
+        </ul>
+
+        <h2>2. 판매 1건당 예상 순이익</h2>
+        <p>순이익 계산기는 고객 주문 1건이 발생했을 때 평균적으로 남는 금액을 추정합니다. 반품 가능성이 있으므로 판매가와 상품 원가에는 판매 유지 확률을 적용하고, 광고비는 입력한 매출 대비 광고비 비율을 판매가에 적용합니다.</p>
+        <p><strong>반품 반영 예상 매출</strong> = 판매가 × (1 − 반품률)</p>
+        <p><strong>반품 반영 상품 원가</strong> = 상품 원가 × (1 − 반품률)</p>
+        <p><strong>예상 수수료</strong> = 반품 반영 예상 매출 × 수수료율 합계</p>
+        <p><strong>예상 광고비</strong> = 판매가 × 광고비율</p>
+        <p><strong>예상 반품 추가 손실</strong> = 반품률 × 반품 1건당 추가 손실</p>
+        <p><strong>예상 순이익</strong> = 예상 매출 − 예상 상품 원가 − 포장비 − 배송비 − 수수료 − 광고비 − 반품 추가 손실</p>
+        <p>반품된 상품의 원가를 완전히 잃는 구조가 아니라는 가정이 포함돼 있습니다. 반품 상품이 훼손되거나 시즌이 지나 정상가 재판매가 어렵다면 그 가치 하락분을 ‘반품 1건당 추가 손실’에 포함해야 합니다.</p>
+
+        <h2>3. 목표 판매가 역산</h2>
+        <p>목표 판매가 계산기는 원가와 비용 비율을 먼저 정한 뒤, 원하는 순이익을 남기기 위한 최소 판매가를 역산합니다. 수수료·광고비·반품률이 너무 높아 판매가를 올려도 구조적으로 목표를 달성하기 어려운 경우에는 계산 불가 상태를 표시합니다.</p>
+        <p><strong>유효 매출계수</strong> = (1 − 반품률) × (1 − 수수료율) − 광고비율</p>
+        <p><strong>최소 판매가</strong> = [목표 순이익 + 반품 반영 상품 원가 + 배송·포장비] ÷ 유효 매출계수</p>
+        <p>표시 가격은 통화별 일반적인 최소 단위로 올림 처리합니다. 현재 KRW는 1,000원, JPY는 100엔, 그 외 통화는 0.01 단위를 사용합니다. 이는 시장에서 가장 좋은 가격을 의미하지 않으며 계산상 목표 이익을 충족하는 최소값입니다.</p>
+
+        <h2>4. 월 손익분기점</h2>
+        <p>손익분기점 계산기는 판매량이 증가할수록 함께 발생하는 변동비와, 판매 여부와 관계없이 발생하는 고정비를 분리합니다.</p>
+        <p><strong>건당 공헌이익</strong> = 평균 판매가 − 건당 변동비</p>
+        <p><strong>월 손익분기 판매량</strong> = 월 고정비 ÷ 건당 공헌이익</p>
+        <p><strong>월 손익분기 매출</strong> = 손익분기 판매량 × 평균 판매가</p>
+        <p>평균 판매가가 건당 변동비보다 낮거나 같으면 판매량을 늘려도 고정비를 회수할 수 없으므로 ‘건당 손실 구조’로 표시합니다.</p>
+
+        <h2>5. 광고 ROAS와 손익분기 ROAS</h2>
+        <p>일반 ROAS는 광고 매출을 광고비로 나눈 값이지만, 높은 ROAS가 반드시 이익을 의미하지는 않습니다. 상품 원가와 기타 변동비를 제외한 광고 전 공헌이익이 광고비를 감당할 수 있어야 합니다.</p>
+        <p><strong>현재 ROAS</strong> = 광고 매출 ÷ 광고비 × 100</p>
+        <p><strong>광고 전 공헌이익률</strong> = 매출총이익률 − 기타 변동비율</p>
+        <p><strong>손익분기 ROAS</strong> = 100 ÷ 광고 전 공헌이익률</p>
+        <p>예를 들어 광고 전 공헌이익률이 25%라면 이론상 손익분기 ROAS는 400%입니다. 실제 운영에서는 취소·반품 시차, 신규 고객 할인과 고정비가 추가될 수 있으므로 안전 여유를 별도로 두는 편이 좋습니다.</p>
+
+        <h2>6. 플랫폼 정산액과 사업 순이익</h2>
+        <p>플랫폼 판매 수익 계산기는 채널이 판매자에게 지급하는 예상 정산액과 사업자가 실제로 남기는 예상 순이익을 구분합니다. 광고비가 플랫폼 정산서 밖에서 결제된다면 정산액에는 포함하지 않고 사업 순이익에서만 차감합니다.</p>
+        <p><strong>예상 정산액</strong> = 반품 반영 매출 − 플랫폼 수수료 − 결제 수수료</p>
+        <p><strong>예상 사업 순이익</strong> = 예상 정산액 − 상품 원가 − 광고비 − 배송비 − 반품 손실</p>
+
+        <h2>7. 재고 보유기간과 재주문점</h2>
+        <p>재고 계산은 최근 월 판매량이 앞으로도 비슷하게 유지된다는 단순 가정을 사용합니다. 시즌성, 품절로 인한 미실현 수요, 대형 프로모션과 생산 지연은 별도로 판단해야 합니다.</p>
+        <p><strong>재고 보유기간</strong> = (현재 재고 + 입고 예정 수량) ÷ 월 평균 판매량</p>
+        <p><strong>일 평균 판매량</strong> = 월 평균 판매량 ÷ 30</p>
+        <p><strong>재주문점</strong> = 일 평균 판매량 × 리드타임 일수 + 안전재고</p>
+        <p><strong>제안 발주량</strong> = 목표 보유재고 − 현재 가용재고</p>
+        <p>사이즈·색상별 판매 속도가 크게 다르면 SKU 단위로 계산해야 합니다. 전체 상품 수량을 합산하면 특정 옵션의 품절 위험을 가릴 수 있습니다.</p>
+
+        <h2>8. 대량 분석의 월 예상치</h2>
+        <p>CSV 대량 분석은 각 상품의 판매 1건당 예상 순이익에 월 판매량을 곱해 월 예상이익을 구합니다. 전체 평균 순이익률은 상품별 마진율을 단순 평균하지 않고, 전체 예상 순이익을 전체 반품 반영 매출로 나눠 계산합니다. 따라서 판매량이 많은 상품의 영향이 더 크게 반영됩니다.</p>
+
+        <h2>9. 계산에서 기본적으로 제외하는 항목</h2>
+        <ul>
+          <li>부가가치세·소득세·법인세와 국가별 세무 처리</li>
+          <li>직원 인건비를 상품별로 배부하는 회계 방식</li>
+          <li>창고 임대료·촬영비·소프트웨어비 등 고정비의 상품별 배부</li>
+          <li>환율 변동, 해외 결제 환전 수수료와 관세</li>
+          <li>플랫폼별 쿠폰 분담, 정산 보류와 프로모션별 예외 규정</li>
+        </ul>
+        <p>이 항목들이 중요한 사업이라면 계산 결과를 최종 회계상 이익으로 사용하지 말고, 월 손익계산서 또는 전문가 검토와 함께 확인해야 합니다.</p>
+
+        <h2>10. 검수와 변경 원칙</h2>
+        <p>계산식과 화면 설명이 다르지 않은지, 수수료·광고비·반품비가 중복 차감되지 않는지, 통화 변경 시 숨겨진 계산기까지 불필요하게 다시 계산하지 않는지 정적 검사를 수행합니다. 계산 로직이 변경되면 이 페이지의 최종 검토일과 설명도 함께 갱신합니다.</p>
+
+        <h2>자주 묻는 질문</h2>
+        <h3>화면의 기본 수수료와 광고비율을 그대로 사용해도 되나요?</h3>
+        <p>아닙니다. 기본값은 기능 설명을 위한 예시입니다. 최신 플랫폼 계약 화면과 같은 기간의 실제 광고비를 입력해야 합니다.</p>
+        <h3>결과가 세무 신고 금액과 다른 이유는 무엇인가요?</h3>
+        <p>계산기는 빠른 가격·광고·재고 의사결정에 초점을 맞추며 세금과 회계상 비용 배부를 모두 반영하지 않습니다.</p>
+        <h3>어떤 통화를 선택해야 하나요?</h3>
+        <p>판매가와 원가를 실제로 관리하는 통화를 선택하고 모든 금액을 같은 통화로 입력하세요. 계산기 자체는 환전을 수행하지 않습니다.</p>
+
+        <p class="hero-actions">
+          <a class="button primary" href="index.html#tools">계산기로 확인하기</a>
+          <a class="button secondary" href="profit-audit.html">여러 상품 분석하기</a>
+        </p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 FashionOps</span><span><a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a></span></div></footer>
+</body>
+</html>
