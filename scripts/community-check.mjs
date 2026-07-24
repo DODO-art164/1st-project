@@ -33,6 +33,9 @@ requireText(write, 'name="robots" content="noindex,follow"', 'community-write.ht
 requireText(write, 'turnstile/v0/api.js?render=explicit', 'community-write.html: Turnstile 클라이언트 연결이 없습니다.');
 requireText(write, '수정·삭제 비밀번호', 'community-write.html: 익명 글 관리 안내가 없습니다.');
 
+const admin = requireFile('community-admin.html');
+requireText(admin, 'name="robots" content="noindex,nofollow"', 'community-admin.html: 관리자 화면이 검색 제외되지 않았습니다.');
+
 const rules = requireFile('community-rules.html');
 for (const phrase of ['도박', '개인정보', '홍보·협업', '신고', 'Google AdSense']) {
   requireText(rules, phrase, `community-rules.html: ${phrase} 운영 기준이 없습니다.`);
@@ -47,11 +50,10 @@ requireText(schema, 'idx_posts_public_latest', 'community-schema.sql: 공개 게
 
 const api = requireFile('functions/api/community/[[path]].js');
 for (const marker of [
-  "iterations: 120000", 'PBKDF2', 'TURNSTILE_SECRET', 'siteverify', 'COMMUNITY_HASH_SALT',
-  'enforceRateLimit', "status = 'published'", 'INSERT OR IGNORE INTO reports', "count >= 5",
-  'requestOriginMatches', 'content-type', 'prepared'
+  'iterations: 120000', 'PBKDF2', 'TURNSTILE_SECRET', 'siteverify', 'COMMUNITY_HASH_SALT',
+  'enforceRateLimit', "status = 'published'", 'INSERT OR IGNORE INTO reports', 'count >= 5',
+  'requestOriginMatches', 'content-type'
 ]) {
-  if (marker === 'prepared') continue;
   requireText(api, marker, `커뮤니티 API: ${marker} 보안·운영 처리가 없습니다.`);
 }
 if (/innerHTML\s*=\s*.*(?:body|title|nickname)/.test(api)) errors.push('커뮤니티 API: 사용자 콘텐츠를 HTML로 직접 출력하는 코드가 있습니다.');
@@ -62,9 +64,11 @@ requireText(ssr, 'DiscussionForumPosting', '커뮤니티 상세: 토론 구조�
 requireText(ssr, "status = 'published'", '커뮤니티 상세: 승인된 글만 공개하는 조건이 없습니다.');
 requireText(ssr, 'data-fashionops-schema', '커뮤니티 상세: 중복 구조화 데이터 방지 표식이 없습니다.');
 requireText(ssr, 'escapeHtml', '커뮤니티 상세: HTML 이스케이프가 없습니다.');
+requireText(ssr, "'cache-control': 'no-store'", '커뮤니티 상세: 삭제·숨김 글이 캐시에 남지 않도록 no-store가 필요합니다.');
+if (/s-maxage|public,\s*max-age/i.test(ssr)) errors.push('커뮤니티 상세: 사용자 게시물을 공개 캐시에 저장하는 설정이 있습니다.');
 
 const client = requireFile('community.js');
-for (const feature of ['/posts?','/comments','/like','/report','fashionops-community-bookmarks-v1','fashionops-community-recent-v1']) {
+for (const feature of ['/posts?', '/comments', '/like', '/report', 'fashionops-community-bookmarks-v1', 'fashionops-community-recent-v1']) {
   requireText(client, feature, `community.js: ${feature} 기능이 없습니다.`);
 }
 requireText(client, 'textContent = post.body', 'community.js: 게시물 본문을 안전한 textContent로 출력하지 않습니다.');
@@ -74,6 +78,11 @@ requireText(middleware, 'injectCommunityNav', '미들웨어: 전역 커뮤니티
 for (const path of ['/community-write.html', '/community-admin.html', '/community-rules.html']) {
   requireText(middleware, path, `미들웨어: ${path} 광고 제외가 없습니다.`);
 }
+
+const worker = requireFile('service-worker.js');
+requireText(worker, "fashionops-shell-v8", 'service-worker.js: 커뮤니티 캐시 정책이 반영된 최신 캐시 버전이 아닙니다.');
+requireText(worker, "!url.pathname.startsWith('/community')", 'service-worker.js: 커뮤니티 HTML 캐시 제외가 없습니다.');
+requireText(worker, "!url.pathname.startsWith('/api/')", 'service-worker.js: API 요청 캐시 제외가 없습니다.');
 
 const sitemap = requireFile('sitemap.xml');
 for (const path of ['/community.html', '/community-rules.html']) {
@@ -86,6 +95,11 @@ if (!manifest.shortcuts?.some((shortcut) => shortcut.url === '/community.html'))
 const privacy = requireFile('privacy.html');
 for (const phrase of ['Cloudflare D1', 'PBKDF2', 'SHA-256', 'Turnstile', '커뮤니티에서 저장하는 정보']) {
   requireText(privacy, phrase, `privacy.html: ${phrase} 고지가 없습니다.`);
+}
+
+const terms = requireFile('terms.html');
+for (const phrase of ['커뮤니티 게시물과 댓글', '커뮤니티 운영과 조치', '익명 작성 비밀번호', 'community-rules.html']) {
+  requireText(terms, phrase, `terms.html: ${phrase} 이용조건이 없습니다.`);
 }
 
 if (errors.length) {
