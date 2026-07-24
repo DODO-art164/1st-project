@@ -1,4 +1,5 @@
-const ADSENSE_TAG = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249" crossorigin="anonymous"></script>';
+const ADSENSE_SCRIPT = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249" crossorigin="anonymous"></script>';
+const ADSENSE_META = '<meta name="google-adsense-account" content="ca-pub-1158392779506249">';
 
 export async function onRequest(context) {
   const response = await context.next();
@@ -6,16 +7,24 @@ export async function onRequest(context) {
 
   if (!contentType.includes('text/html')) return response;
 
-  const html = await response.text();
-  const alreadyInstalled = html.includes('ca-pub-1158392779506249');
-  const output = alreadyInstalled || !html.includes('</head>')
-    ? html
-    : html.replace('</head>', `  ${ADSENSE_TAG}\n</head>`);
+  let html = await response.text();
+  if (html.includes('</head>')) {
+    const tags = [];
+    if (!html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249')) {
+      tags.push(ADSENSE_SCRIPT);
+    }
+    if (!html.includes('name="google-adsense-account"')) {
+      tags.push(ADSENSE_META);
+    }
+    if (tags.length) {
+      html = html.replace('</head>', `  ${tags.join('\n  ')}\n</head>`);
+    }
+  }
 
   const headers = new Headers(response.headers);
   headers.delete('content-length');
 
-  return new Response(output, {
+  return new Response(html, {
     status: response.status,
     statusText: response.statusText,
     headers
