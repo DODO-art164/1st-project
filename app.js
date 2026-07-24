@@ -268,6 +268,13 @@ Object.entries(calculators).forEach(([key, { formId, resultId, calculate }]) => 
   }
 });
 
+function keepTabVisible(tab, smooth = false) {
+  const container = tab.parentElement;
+  if (!container) return;
+  const left = tab.offsetLeft - (container.clientWidth - tab.offsetWidth) / 2;
+  container.scrollTo({ left: Math.max(0, left), behavior: smooth ? 'smooth' : 'auto' });
+}
+
 function activateCalculator(key, updateUrl = false) {
   const selected = calculators[key] || calculators.profit;
 
@@ -282,7 +289,7 @@ function activateCalculator(key, updateUrl = false) {
     tab.tabIndex = active ? 0 : -1;
     const panel = document.getElementById(tab.getAttribute('aria-controls'));
     if (panel) panel.setAttribute('aria-labelledby', tab.id);
-    if (active) tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    if (active && updateUrl) keepTabVisible(tab, true);
   });
 
   selected.calculate();
@@ -290,8 +297,15 @@ function activateCalculator(key, updateUrl = false) {
 }
 
 const keyByPanelId = Object.fromEntries(Object.entries(calculators).map(([key, value]) => [value.panelId, key]));
-const initialKey = keyByPanelId[location.hash.slice(1)] || 'profit';
+const initialPanelId = location.hash.slice(1);
+const initialKey = keyByPanelId[initialPanelId] || 'profit';
 activateCalculator(initialKey);
+
+if (keyByPanelId[initialPanelId]) {
+  requestAnimationFrame(() => {
+    document.getElementById(initialPanelId)?.scrollIntoView({ block: 'start' });
+  });
+}
 
 document.querySelectorAll('[data-calculator-tab]').forEach((tab) => {
   tab.addEventListener('click', () => activateCalculator(tab.dataset.calculatorTab, true));
@@ -312,8 +326,11 @@ document.querySelectorAll('[data-calculator-tab]').forEach((tab) => {
 });
 
 window.addEventListener('hashchange', () => {
-  const key = keyByPanelId[location.hash.slice(1)];
-  if (key) activateCalculator(key);
+  const panelId = location.hash.slice(1);
+  const key = keyByPanelId[panelId];
+  if (!key) return;
+  activateCalculator(key);
+  requestAnimationFrame(() => document.getElementById(panelId)?.scrollIntoView({ block: 'start' }));
 });
 
 document.querySelectorAll('.copy-button[data-copy-target]').forEach((button) => {
