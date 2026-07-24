@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>온라인 사업자 커뮤니티 | FashionOps</title>
+  <meta name="description" content="온라인 쇼핑몰, 스마트스토어, 쿠팡, 자사몰, 광고, 재고와 1인 사업 운영 경험을 나누는 FashionOps 사업자 커뮤니티입니다.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://1st-project-3aj.pages.dev/community.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="ux.css">
+  <link rel="stylesheet" href="community.css?v=1">
+</head>
+<body data-community-page="home">
+  <a class="skip-link" href="#community-content">게시글로 바로 이동</a>
+  <header class="site-header ad-exclusion-zone" id="site-navigation">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="FashionOps 홈"><span class="brand-mark">F</span><span>FashionOps</span></a>
+      <nav class="main-nav" aria-label="주요 메뉴">
+        <a href="index.html#tools">계산기</a>
+        <a href="profit-audit.html">대량분석</a>
+        <a aria-current="page" href="community.html">커뮤니티</a>
+        <a class="nav-cta" href="resources.html">전체도구</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="community-main" id="community-content">
+    <section class="community-hero">
+      <div class="container community-hero-grid">
+        <div>
+          <span class="section-kicker">BUSINESS COMMUNITY</span>
+          <h1>사업하는 사람들의<br>현실적인 이야기.</h1>
+          <p>온라인 판매, 광고, 플랫폼, 재고, 매출과 1인 사업의 시행착오를 자유롭게 나누세요. 숫자가 궁금할 때는 계산기로 바로 확인할 수 있습니다.</p>
+        </div>
+        <div class="community-hero-actions">
+          <a class="button primary" href="community-write.html">글쓰기</a>
+          <a class="button secondary" href="community-rules.html">이용규칙</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="container">
+      <div class="community-shell">
+        <section class="community-primary" aria-label="커뮤니티 게시글">
+          <div class="community-notice" id="community-setup-notice" hidden>
+            커뮤니티 화면과 API는 배포됐지만 D1 데이터베이스 연결이 아직 필요합니다. 연결이 완료되면 운영팀의 초기 게시글과 글쓰기 기능이 활성화됩니다.
+          </div>
+
+          <div class="community-toolbar">
+            <form class="community-search" id="community-search-form" role="search">
+              <span aria-hidden="true">⌕</span>
+              <input id="community-search" type="search" maxlength="80" placeholder="게시글 검색: 광고, 쿠팡, 재고, 첫 매출…" aria-label="커뮤니티 검색">
+            </form>
+            <select class="community-sort" id="community-sort" aria-label="게시글 정렬">
+              <option value="latest">최신순</option>
+              <option value="popular">인기순</option>
+              <option value="comments">댓글 많은 순</option>
+              <option value="views">조회순</option>
+            </select>
+          </div>
+
+          <div class="community-categories" aria-label="게시판 선택">
+            <button class="community-category" type="button" data-category="all" aria-pressed="true">전체</button>
+            <button class="community-category" type="button" data-category="free" aria-pressed="false">자유</button>
+            <button class="community-category" type="button" data-category="question" aria-pressed="false">질문·답변</button>
+            <button class="community-category" type="button" data-category="operations" aria-pressed="false">매출·운영</button>
+            <button class="community-category" type="button" data-category="marketing" aria-pressed="false">마케팅·광고</button>
+            <button class="community-category" type="button" data-category="platform" aria-pressed="false">판매 플랫폼</button>
+            <button class="community-category" type="button" data-category="information" aria-pressed="false">정보·자료</button>
+            <button class="community-category" type="button" data-category="promotion" aria-pressed="false">홍보·협업</button>
+          </div>
+
+          <div class="community-list" aria-live="polite">
+            <div class="community-list-head"><b>게시글</b><span id="community-result-count">불러오는 중</span></div>
+            <div id="community-post-list"><div class="community-loading">게시글을 불러오는 중입니다.</div></div>
+          </div>
+          <nav class="community-pagination" id="community-pagination" aria-label="게시글 페이지"></nav>
+        </section>
+
+        <aside class="community-sidebar" aria-label="커뮤니티 보조 정보">
+          <section class="community-card">
+            <h2>커뮤니티 현황</h2>
+            <div class="community-stat-grid">
+              <div class="community-stat"><b data-community-stat="posts">-</b><span>공개 글</span></div>
+              <div class="community-stat"><b data-community-stat="comments">-</b><span>댓글</span></div>
+              <div class="community-stat"><b data-community-stat="today">-</b><span>최근 24시간 글</span></div>
+              <div class="community-stat"><b data-community-stat="unanswered">-</b><span>답변 대기 질문</span></div>
+            </div>
+          </section>
+
+          <section class="community-card">
+            <h2>지금 많이 보는 글</h2>
+            <div class="community-side-links" id="community-popular-links"><p>인기 글을 불러오는 중입니다.</p></div>
+          </section>
+
+          <section class="community-card">
+            <h2>함께 쓰는 도구</h2>
+            <div class="community-side-links">
+              <a href="index.html#profit-calculator"><b>실제 순이익 계산</b><span>무료</span></a>
+              <a href="roas-calculator.html"><b>광고 ROAS 계산</b><span>무료</span></a>
+              <a href="profit-audit.html"><b>상품별 대량 손익</b><span>CSV</span></a>
+              <a href="weekly-profit-check.html"><b>주간 운영 점검</b><span>저장</span></a>
+            </div>
+          </section>
+
+          <section class="community-card">
+            <h2>안전한 이용</h2>
+            <p>고객 개인정보, 주문번호, 로그인 정보와 공개하면 곤란한 매출 원본은 올리지 마세요. 반복 홍보는 홍보·협업 게시판을 이용해 주세요.</p>
+            <p style="margin-top:10px"><a href="community-rules.html" style="color:var(--accent);font-weight:600">운영·신고 기준 보기 →</a></p>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 FashionOps</span><span><a href="community-rules.html">커뮤니티 규칙</a> · <a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="contact.html">문의</a></span></div></footer>
+  <script src="community.js?v=1" defer></script>
+</body>
+</html>
