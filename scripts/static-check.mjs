@@ -58,6 +58,7 @@ if (!existsSync(sitemapPath)) {
   }
   for (const requiredPath of [
     '/weekly-profit-check.html',
+    '/calculation-methodology.html',
     '/online-store-profit-guide.html',
     '/shopping-mall-fee-profit-guide.html',
     '/break-even-roas-guide.html'
@@ -79,16 +80,16 @@ for (const file of htmlFiles) {
 }
 
 const indexHtml = read('index.html');
-if (indexHtml.includes('fonts.googleapis.com') || indexHtml.includes('fonts.gstatic.com')) report('index.html: 첫 화면을 지연시키는 외부 웹폰트가 다시 추가되었습니다.');
+if (indexHtml.includes('fonts.googleapis.com') || indexHtml.includes('fonts.gstatic.com')) report('index.html: 웹폰트는 미들웨어에서 한 번만 주입해야 합니다.');
 if (!indexHtml.includes('id="calculator-workspace"')) report('index.html: 계산 작업영역 식별자가 없습니다.');
 if (!indexHtml.includes('ad-exclusion-zone')) report('index.html: 자동광고 제외 영역을 선택하기 위한 안정적인 클래스가 없습니다.');
 
 const resourcesHtml = read('resources.html');
-for (const path of ['online-store-profit-guide.html', 'shopping-mall-fee-profit-guide.html', 'break-even-roas-guide.html']) {
+for (const path of ['calculation-methodology.html', 'online-store-profit-guide.html', 'shopping-mall-fee-profit-guide.html', 'break-even-roas-guide.html']) {
   if (!resourcesHtml.includes(path)) report(`resources.html에 ${path} 내부 링크가 없습니다.`);
 }
 
-for (const guide of ['online-store-profit-guide.html', 'shopping-mall-fee-profit-guide.html', 'break-even-roas-guide.html']) {
+for (const guide of ['calculation-methodology.html', 'online-store-profit-guide.html', 'shopping-mall-fee-profit-guide.html', 'break-even-roas-guide.html']) {
   if (!existsSync(join(root, guide))) {
     report(`${guide}가 없습니다.`);
     continue;
@@ -96,6 +97,16 @@ for (const guide of ['online-store-profit-guide.html', 'shopping-mall-fee-profit
   const content = read(guide);
   if (content.length < 5000) warnings.push(`${guide}: 검색 유입용 본문이 충분히 상세한지 다시 검토하세요.`);
   if (!content.includes('"@type":"Article"')) report(`${guide}: Article 구조화 데이터가 없습니다.`);
+}
+
+if (!existsSync(join(root, 'global-ux.css'))) {
+  report('global-ux.css가 없습니다.');
+} else {
+  const globalUx = read('global-ux.css');
+  if (!globalUx.includes('--font-sans:"Noto Sans KR"')) report('global-ux.css: Noto Sans KR이 기본 글꼴로 지정되지 않았습니다.');
+  if (!globalUx.includes('font-synthesis:none')) report('global-ux.css: 브라우저의 가짜 굵기·이탤릭 합성을 차단하지 않습니다.');
+  if (!globalUx.includes('grid-template-columns:repeat(auto-fit,minmax(96px,1fr))')) report('global-ux.css: 모바일 메뉴가 화면 안에서 자동 배치되지 않습니다.');
+  if (/font-weight:(?:650|750|850|880)/.test(globalUx)) report('global-ux.css: 지원되지 않는 합성 글꼴 굵기가 있습니다.');
 }
 
 const requiredCurrencyScripts = ['app.js', 'bulk-profit.js', 'special-tools.js'];
@@ -144,6 +155,7 @@ if (existsSync(join(root, 'service-worker.js'))) {
   if (!/fashionops-shell-v\d+/.test(worker)) report('service-worker.js: 버전이 지정된 캐시 이름이 없습니다.');
   if (!worker.includes('navigationPreload.enable')) warnings.push('service-worker.js: 탐색 프리로드가 활성화되지 않았습니다.');
   if (!worker.includes('!url.search')) report('service-worker.js: 공유 입력값이 포함된 쿼리 URL을 캐시에서 제외하지 않습니다.');
+  if (!worker.includes('/global-ux.css?v=6')) report('service-worker.js: 최신 타이포그래피 CSS 버전을 캐시하지 않습니다.');
 }
 
 if (existsSync(join(root, 'manifest.webmanifest'))) {
@@ -174,7 +186,12 @@ if (!existsSync(middlewarePath)) {
   if (!middleware.includes('BreadcrumbList')) report('미들웨어에 브레드크럼 구조화 데이터가 없습니다.');
   if (!middleware.includes('twitter:card')) report('미들웨어에 공유용 메타태그가 없습니다.');
   if (!middleware.includes('utilityPaths') || !middleware.includes('shouldInjectAds')) report('404·오프라인 페이지 광고 제외 처리가 없습니다.');
+  if (!middleware.includes('Noto+Sans+KR:wght@400;500;600;700')) report('미들웨어가 승인된 네 가지 Noto Sans KR 굵기를 로드하지 않습니다.');
+  if (!middleware.includes('/global-ux.css?v=6')) report('미들웨어가 최신 타이포그래피 CSS를 로드하지 않습니다.');
 }
+
+const privacyHtml = read('privacy.html');
+if (!privacyHtml.includes('Google Fonts') || !privacyHtml.includes('Noto Sans KR')) report('privacy.html: 웹폰트 제공 과정에 대한 고지가 없습니다.');
 
 const koreanTemplatePath = join(root, 'profit-audit-template.csv');
 if (!existsSync(koreanTemplatePath)) report('한국어 CSV 양식이 없습니다.');
