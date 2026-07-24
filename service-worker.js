@@ -1,11 +1,11 @@
-const CACHE_NAME = 'fashionops-shell-v3';
+const CACHE_NAME = 'fashionops-shell-v4';
 const CORE_ASSETS = [
   '/',
   '/offline.html',
   '/styles.css',
   '/ux.css',
   '/global-ux.css?v=3',
-  '/global-ux.js?v=2',
+  '/global-ux.js?v=3',
   '/engagement.css?v=1',
   '/engagement.js?v=2',
   '/currency.js?v=4',
