@@ -1,5 +1,6 @@
 const ADSENSE_SCRIPT = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249" crossorigin="anonymous"></script>';
 const ADSENSE_META = '<meta name="google-adsense-account" content="ca-pub-1158392779506249">';
+const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css">';
 
 export async function onRequest(context) {
   const response = await context.next();
@@ -15,6 +16,9 @@ export async function onRequest(context) {
     }
     if (!html.includes('name="google-adsense-account"')) {
       tags.push(ADSENSE_META);
+    }
+    if (!html.includes('/global-ux.css')) {
+      tags.push(GLOBAL_UX);
     }
     if (tags.length) html = html.replace('</head>', `  ${tags.join('\n  ')}\n</head>`);
   }
