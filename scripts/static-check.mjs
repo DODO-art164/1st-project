@@ -10,6 +10,10 @@ function report(message) {
   errors.push(message);
 }
 
+function read(path) {
+  return readFileSync(join(root, path), 'utf8');
+}
+
 function localPath(rawValue) {
   const value = rawValue.trim();
   if (!value || /^(?:https?:)?\/\//i.test(value) || /^(?:mailto|tel|data|javascript):/i.test(value) || value.startsWith('#')) return null;
@@ -20,7 +24,7 @@ function localPath(rawValue) {
 }
 
 for (const file of htmlFiles) {
-  const html = readFileSync(join(root, file), 'utf8');
+  const html = read(file);
   const titleCount = (html.match(/<title\b/gi) || []).length;
   if (titleCount !== 1) report(`${file}: <title> 태그가 ${titleCount}개입니다.`);
   if (!/<meta\s+name=["']viewport["']/i.test(html)) report(`${file}: viewport 메타태그가 없습니다.`);
@@ -50,7 +54,7 @@ const sitemapPath = join(root, 'sitemap.xml');
 if (!existsSync(sitemapPath)) {
   report('sitemap.xml이 없습니다.');
 } else {
-  const sitemap = readFileSync(sitemapPath, 'utf8');
+  const sitemap = read('sitemap.xml');
   for (const match of sitemap.matchAll(/<loc>https:\/\/1st-project-3aj\.pages\.dev\/([^<]*)<\/loc>/g)) {
     const path = match[1] || 'index.html';
     if (!existsSync(join(root, path))) report(`sitemap.xml: 존재하지 않는 경로가 포함되어 있습니다: /${match[1]}`);
@@ -60,12 +64,63 @@ if (!existsSync(sitemapPath)) {
 const adsPath = join(root, 'ads.txt');
 const expectedAds = 'google.com, pub-1158392779506249, DIRECT, f08c47fec0942fa0';
 if (!existsSync(adsPath)) report('ads.txt가 없습니다.');
-else if (readFileSync(adsPath, 'utf8').trim() !== expectedAds) report('ads.txt 내용이 현재 AdSense 게시자 ID와 일치하지 않습니다.');
+else if (read('ads.txt').trim() !== expectedAds) report('ads.txt 내용이 현재 AdSense 게시자 ID와 일치하지 않습니다.');
 
 for (const file of htmlFiles) {
-  const html = readFileSync(join(root, file), 'utf8');
+  const html = read(file);
   if (html.includes('contact@fashionops.ai')) report(`${file}: 운영하지 않는 이메일 주소가 남아 있습니다.`);
   if (/Google AdSense 광고 영역/i.test(html)) warnings.push(`${file}: 비어 있는 광고 자리 안내문이 남아 있습니다.`);
+}
+
+const requiredCurrencyScripts = ['app.js', 'bulk-profit.js', 'special-tools.js'];
+for (const file of requiredCurrencyScripts) {
+  if (!existsSync(join(root, file))) {
+    report(`${file}: 계산 스크립트가 없습니다.`);
+    continue;
+  }
+  const source = read(file);
+  if (!source.includes('FashionOpsCurrency')) report(`${file}: 선택 통화 포맷을 직접 사용하지 않습니다.`);
+}
+
+if (existsSync(join(root, 'currency.js'))) {
+  const currencySource = read('currency.js');
+  if (/observe\s*\(\s*document\.body/i.test(currencySource)) {
+    report('currency.js: document.body 전체를 감시하는 MutationObserver가 다시 추가되었습니다.');
+  }
+  if (/characterData\s*:\s*true/i.test(currencySource)) {
+    report('currency.js: 모든 텍스트 변경을 감시하는 characterData observer가 다시 추가되었습니다.');
+  }
+  if (/dispatchEvent\s*\(\s*new Event\s*\(\s*["']input/i.test(currencySource)) {
+    report('currency.js: 통화 변경 시 입력 이벤트를 대량 발생시키는 코드가 다시 추가되었습니다.');
+  }
+} else {
+  report('currency.js가 없습니다.');
+}
+
+if (existsSync(join(root, 'bulk-profit.js'))) {
+  const bulkSource = read('bulk-profit.js');
+  if (/querySelectorAll\(['"]input['"]\).*addEventListener\(['"]input['"],\s*calculateAll/s.test(bulkSource)) {
+    report('bulk-profit.js: 상품 행마다 전체 재계산 이벤트를 등록하는 비효율적인 코드가 있습니다.');
+  }
+  if (!bulkSource.includes('requestAnimationFrame')) {
+    warnings.push('bulk-profit.js: 입력 계산 프레임 조절 코드가 없습니다.');
+  }
+}
+
+const koreanTemplatePath = join(root, 'profit-audit-template.csv');
+if (!existsSync(koreanTemplatePath)) {
+  report('한국어 CSV 양식이 없습니다.');
+} else {
+  const koreanTemplate = readFileSync(koreanTemplatePath, 'utf8');
+  if (!koreanTemplate.startsWith('\ufeff')) report('한국어 CSV 양식에 Excel 호환 UTF-8 BOM이 없습니다.');
+  if (!koreanTemplate.includes('상품명,판매가,원가')) report('한국어 CSV 양식 헤더가 올바르지 않습니다.');
+}
+
+const englishTemplatePath = join(root, 'profit-audit-template-en.csv');
+if (!existsSync(englishTemplatePath)) {
+  report('영문 CSV 양식이 없습니다.');
+} else if (!read('profit-audit-template-en.csv').startsWith('Currency,Product name,Price,Cost')) {
+  report('영문 CSV 양식 헤더가 올바르지 않습니다.');
 }
 
 if (warnings.length) {
