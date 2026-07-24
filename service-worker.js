@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fashionops-shell-v7';
+const CACHE_NAME = 'fashionops-shell-v8';
 const CORE_ASSETS = [
   '/',
   '/offline.html',
@@ -26,16 +26,22 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
+function canCacheNavigation(url) {
+  return !url.search
+    && !url.pathname.startsWith('/community')
+    && !url.pathname.startsWith('/api/');
+}
+
 async function navigationResponse(event, request, url) {
   try {
     const response = await event.preloadResponse || await fetch(request);
-    if (response.ok && !url.search) {
+    if (response.ok && canCacheNavigation(url)) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone()).catch(() => {});
     }
     return response;
   } catch {
-    if (!url.search) {
+    if (canCacheNavigation(url)) {
       const cached = await caches.match(request);
       if (cached) return cached;
     }
