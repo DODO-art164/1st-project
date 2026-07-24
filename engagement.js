@@ -11,7 +11,9 @@
     cost: { label: '의류 제작 원가', path: '/clothing-cost-calculator.html', next: [['목표 판매가', '/#price-calculator'], ['할인 손익', '/discount-profit-calculator.html']] },
     discount: { label: '할인 손익', path: '/discount-profit-calculator.html', next: [['실제 순이익', '/#profit-calculator'], ['플랫폼 수익', '/marketplace-profit-calculator.html']] },
     roas: { label: '광고 ROAS', path: '/roas-calculator.html', next: [['실제 순이익', '/#profit-calculator'], ['여러 상품 비교', '/profit-audit.html']] },
-    marketplace: { label: '플랫폼 판매 수익', path: '/marketplace-profit-calculator.html', next: [['할인 손익', '/discount-profit-calculator.html'], ['여러 상품 비교', '/profit-audit.html']] }
+    marketplace: { label: '플랫폼 판매 수익', path: '/marketplace-profit-calculator.html', next: [['할인 손익', '/discount-profit-calculator.html'], ['여러 상품 비교', '/profit-audit.html']] },
+    bulk: { label: '상품별 대량 손익', path: '/profit-audit.html' },
+    weekly: { label: '주간 운영 점검', path: '/weekly-profit-check.html' }
   };
 
   let toastTimer = 0;
@@ -48,6 +50,9 @@
   }
 
   function currentTool() {
+    const pathname = location.pathname.replace(/\/$/, '') || '/';
+    if (pathname === '/profit-audit' || pathname === '/profit-audit.html') return 'bulk';
+    if (pathname === '/weekly-profit-check' || pathname === '/weekly-profit-check.html') return 'weekly';
     if (toolMeta[document.body.dataset.tool]) return document.body.dataset.tool;
     const visible = document.querySelector('[data-calculator-panel]:not([hidden])');
     if (visible?.dataset.calculatorPanel) return visible.dataset.calculatorPanel;
@@ -69,7 +74,7 @@
   }
 
   function buildState(tool = currentTool()) {
-    if (!tool || !toolMeta[tool]) return null;
+    if (!tool || !toolMeta[tool] || ['bulk', 'weekly'].includes(tool)) return null;
     return {
       v: 1,
       tool,
@@ -92,7 +97,7 @@
       const binary = atob(padded);
       const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
       const state = JSON.parse(new TextDecoder().decode(bytes));
-      if (state?.v !== 1 || !toolMeta[state.tool] || typeof state.inputs !== 'object') return null;
+      if (state?.v !== 1 || !toolMeta[state.tool] || ['bulk', 'weekly'].includes(state.tool) || typeof state.inputs !== 'object') return null;
       return state;
     } catch (error) {
       return null;
@@ -102,9 +107,7 @@
   const sharedState = decodeState(new URLSearchParams(location.search).get('fo') || '');
   if (sharedState && MAIN_TOOLS.has(sharedState.tool) && (location.pathname === '/' || location.pathname.endsWith('/index.html'))) {
     const hash = toolMeta[sharedState.tool].hash;
-    if (location.hash.slice(1) !== hash) {
-      history.replaceState(null, '', `${location.pathname}${location.search}#${hash}`);
-    }
+    if (location.hash.slice(1) !== hash) history.replaceState(null, '', `${location.pathname}${location.search}#${hash}`);
   }
 
   function stateUrl(state) {
@@ -129,6 +132,7 @@
 
   function resultPanelForTool(tool) {
     if (MAIN_TOOLS.has(tool)) return document.getElementById(`${tool}-result`);
+    if (['bulk', 'weekly'].includes(tool)) return null;
     return document.querySelector('.result-panel');
   }
 
@@ -142,7 +146,8 @@
   function saveScenario(tool) {
     const state = buildState(tool);
     if (!state) return;
-    const scenarios = readJson(SCENARIO_STORE, []);
+    const scenarios = readJson(SCENARIO_STORE, []).filter((scenario) => scenario?.state);
+    const fingerprint = encodeState(state);
     const item = {
       id: `${Date.now()}-${tool}`,
       tool,
@@ -151,7 +156,10 @@
       savedAt: new Date().toISOString(),
       state
     };
-    const next = [item, ...scenarios.filter((scenario) => scenario.tool !== tool)].slice(0, 8);
+    const next = [item, ...scenarios.filter((scenario) => {
+      try { return encodeState(scenario.state) !== fingerprint; }
+      catch (error) { return false; }
+    })].slice(0, 8);
     writeJson(SCENARIO_STORE, next);
     rememberLast(tool);
     showToast('계산을 이 브라우저에 저장했습니다.');
@@ -165,9 +173,8 @@
     const url = stateUrl(state);
     const title = `FashionOps ${toolMeta[tool].label} 계산`;
     try {
-      if (navigator.share) {
-        await navigator.share({ title, text: '입력값이 포함된 계산 링크입니다.', url });
-      } else {
+      if (navigator.share) await navigator.share({ title, text: '입력값이 포함된 계산 링크입니다.', url });
+      else {
         await navigator.clipboard.writeText(url);
         showToast('입력값이 포함된 공유 링크를 복사했습니다.');
       }
@@ -186,9 +193,7 @@
       const actions = document.createElement('div');
       actions.className = 'engagement-actions';
       actions.dataset.engagementTool = tool;
-      actions.innerHTML = `
-        <button class="copy-button" type="button" data-save-scenario="${tool}">계산 저장</button>
-        <button class="copy-button" type="button" data-share-scenario="${tool}">공유 링크</button>`;
+      actions.innerHTML = `<button class="copy-button" type="button" data-save-scenario="${tool}">계산 저장</button><button class="copy-button" type="button" data-share-scenario="${tool}">공유 링크</button>`;
       panel.appendChild(actions);
 
       const next = toolMeta[tool].next || [];
@@ -211,22 +216,16 @@
   function rememberLast(tool = currentTool()) {
     if (!tool || !toolMeta[tool]) return;
     clearTimeout(lastSaveTimer);
-    lastSaveTimer = window.setTimeout(() => {
-      writeJson(LAST_STORE, { tool, at: new Date().toISOString() });
-    }, 250);
+    lastSaveTimer = window.setTimeout(() => writeJson(LAST_STORE, { tool, at: new Date().toISOString() }), 250);
   }
 
   function recentItems() {
-    const scenarios = readJson(SCENARIO_STORE, []).filter((scenario) => toolMeta[scenario.tool]).slice(0, 3);
-    if (scenarios.length) return scenarios.map((scenario) => ({
-      label: scenario.label,
-      summary: scenario.summary || '저장한 입력값',
-      href: stateUrl(scenario.state)
-    }));
+    const scenarios = readJson(SCENARIO_STORE, []).filter((scenario) => scenario?.state && toolMeta[scenario.tool]).slice(0, 3);
+    if (scenarios.length) return scenarios.map((scenario) => ({ label: scenario.label, summary: scenario.summary || '저장한 입력값', href: stateUrl(scenario.state) }));
     const last = readJson(LAST_STORE, null);
     if (last?.tool && toolMeta[last.tool]) {
       const meta = toolMeta[last.tool];
-      return [{ label: meta.label, summary: '마지막 입력값 이어서 확인', href: `${meta.path}${meta.hash ? `#${meta.hash}` : ''}` }];
+      return [{ label: meta.label, summary: '마지막 작업 이어서 확인', href: `${meta.path}${meta.hash ? `#${meta.hash}` : ''}` }];
     }
     return [];
   }
@@ -243,36 +242,24 @@
     const section = document.createElement('section');
     section.id = 'resume-section';
     section.className = 'resume-section';
-    section.innerHTML = `
-      <div class="container">
-        <div class="resume-shell">
-          <div class="resume-copy">
-            <span>다시 방문하셨네요</span>
-            <h2>최근 계산을 이어서 확인하세요</h2>
-            <p>저장된 값은 현재 브라우저에만 보관됩니다.</p>
-            <div class="resume-items">${items.map((item) => `<a class="resume-item" href="${item.href}"><b>${item.label}</b><small>${item.summary}</small></a>`).join('')}</div>
-          </div>
-          <a class="button secondary" href="/weekly-profit-check.html">이번 주 운영 점검</a>
-        </div>
-      </div>`;
+    section.innerHTML = `<div class="container"><div class="resume-shell"><div class="resume-copy"><span>다시 방문하셨네요</span><h2>최근 작업을 이어서 확인하세요</h2><p>저장된 값과 진행 상태는 현재 브라우저에만 보관됩니다.</p><div class="resume-items">${items.map((item) => `<a class="resume-item" href="${item.href}"><b>${item.label}</b><small>${item.summary}</small></a>`).join('')}</div></div><a class="button secondary" href="/weekly-profit-check.html">이번 주 운영 점검</a></div></div>`;
     workspace.before(section);
   }
 
   function mountSavedManager(force = false) {
-    if (!location.pathname.endsWith('/resources.html')) return;
+    const resourcePage = ['/resources', '/resources.html'].includes(location.pathname.replace(/\/$/, ''));
+    if (!resourcePage) return;
     const existing = document.getElementById('saved-manager');
     if (existing && !force) return;
     existing?.remove();
-    const scenarios = readJson(SCENARIO_STORE, []).filter((scenario) => toolMeta[scenario.tool]);
+    const scenarios = readJson(SCENARIO_STORE, []).filter((scenario) => scenario?.state && toolMeta[scenario.tool]);
     if (!scenarios.length) return;
     const primary = document.querySelector('.primary-tools');
     if (!primary) return;
     const manager = document.createElement('section');
     manager.id = 'saved-manager';
     manager.className = 'saved-manager';
-    manager.innerHTML = `
-      <div class="saved-manager-head"><h2>저장한 계산</h2><button class="button secondary" type="button" id="clear-saved-scenarios">전체 삭제</button></div>
-      <div class="saved-list">${scenarios.map((scenario) => `<div class="saved-row"><a href="${stateUrl(scenario.state)}">${scenario.label}<small>${scenario.summary || '저장한 입력값'}</small></a><button type="button" data-delete-scenario="${scenario.id}">삭제</button></div>`).join('')}</div>`;
+    manager.innerHTML = `<div class="saved-manager-head"><h2>저장한 계산</h2><button class="button secondary" type="button" id="clear-saved-scenarios">전체 삭제</button></div><div class="saved-list">${scenarios.map((scenario) => `<div class="saved-row"><a href="${stateUrl(scenario.state)}">${scenario.label}<small>${scenario.summary || '저장한 입력값'}</small></a><button type="button" data-delete-scenario="${scenario.id}">삭제</button></div>`).join('')}</div>`;
     primary.after(manager);
 
     manager.addEventListener('click', (event) => {
@@ -330,9 +317,7 @@
   });
 
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js').catch(() => {});
-    });
+    window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(() => {}));
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -342,9 +327,10 @@
     mountSavedManager();
     mountWeeklyCard();
     mountInstallButton();
+    rememberLast(currentTool());
 
     document.addEventListener('input', (event) => {
-      if (event.target.matches('input[id]')) rememberLast();
+      if (event.target.matches('input[id], textarea[id]')) rememberLast();
     }, { passive: true });
     document.addEventListener('click', (event) => {
       const tab = event.target.closest('[data-calculator-tab]');
