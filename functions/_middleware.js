@@ -5,7 +5,7 @@ const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=2" defer></script>';
 const GLOBAL_CURRENCY = '<script src="/currency.js?v=4"></script>';
 const BULK_IMPORT_SCRIPT = '<script src="/bulk-import.js?v=1" defer></script>';
 const ENGAGEMENT_CSS = '<link rel="stylesheet" href="/engagement.css?v=1">';
-const ENGAGEMENT_SCRIPT = '<script src="/engagement.js?v=1" defer></script>';
+const ENGAGEMENT_SCRIPT = '<script src="/engagement.js?v=2" defer></script>';
 const SITE_ORIGIN = 'https://1st-project-3aj.pages.dev';
 
 const currencyPaths = new Set([
@@ -33,6 +33,8 @@ const engagementPaths = new Set([
   '/weekly-profit-check.html'
 ]);
 
+const utilityPaths = new Set(['/404.html', '/offline.html']);
+
 function textContent(value = '') {
   return value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -42,6 +44,7 @@ function escapeAttribute(value = '') {
 }
 
 function metadataFor(html, pathname) {
+  if (utilityPaths.has(pathname)) return [];
   const title = textContent(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || 'FashionOps');
   const description = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i)?.[1]
     || html.match(/<meta\s+content=["']([^"']*)["']\s+name=["']description["']/i)?.[1]
@@ -58,7 +61,8 @@ function metadataFor(html, pathname) {
 
   if (!html.includes('data-fashionops-schema')) {
     const pageName = title.split('|')[0].trim() || 'FashionOps';
-    const schema = pathname === '/'
+    const isHome = pathname === '/' || pathname === '/index.html';
+    const schema = isHome
       ? {
           '@context': 'https://schema.org',
           '@graph': [
@@ -88,12 +92,13 @@ export async function onRequest(context) {
   const needsCurrency = currencyPaths.has(pathname);
   const needsBulkImport = pathname === '/profit-audit' || pathname === '/profit-audit.html';
   const needsEngagement = engagementPaths.has(pathname);
+  const shouldInjectAds = !utilityPaths.has(pathname);
 
   let html = await response.text();
   if (html.includes('</head>')) {
     const tags = metadataFor(html, pathname);
-    if (!html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249')) tags.push(ADSENSE_SCRIPT);
-    if (!html.includes('name="google-adsense-account"')) tags.push(ADSENSE_META);
+    if (shouldInjectAds && !html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249')) tags.push(ADSENSE_SCRIPT);
+    if (shouldInjectAds && !html.includes('name="google-adsense-account"')) tags.push(ADSENSE_META);
     if (!html.includes('/global-ux.css')) tags.push(GLOBAL_UX);
     if (!html.includes('/global-ux.js')) tags.push(GLOBAL_UX_SCRIPT);
     if (needsCurrency && !html.includes('/currency.js')) tags.push(GLOBAL_CURRENCY);
