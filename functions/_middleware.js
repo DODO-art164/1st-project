@@ -1,18 +1,24 @@
 const ADSENSE_SCRIPT = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249" crossorigin="anonymous"></script>';
 const ADSENSE_META = '<meta name="google-adsense-account" content="ca-pub-1158392779506249">';
 const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=3">';
-const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=1" defer></script>';
+const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=2" defer></script>';
 const GLOBAL_CURRENCY = '<script src="/currency.js?v=4"></script>';
 const BULK_IMPORT_SCRIPT = '<script src="/bulk-import.js?v=1" defer></script>';
 
 const currencyPaths = new Set([
   '/',
   '/index.html',
+  '/profit-audit',
   '/profit-audit.html',
+  '/startup-cost-calculator',
   '/startup-cost-calculator.html',
+  '/clothing-cost-calculator',
   '/clothing-cost-calculator.html',
+  '/discount-profit-calculator',
   '/discount-profit-calculator.html',
+  '/roas-calculator',
   '/roas-calculator.html',
+  '/marketplace-profit-calculator',
   '/marketplace-profit-calculator.html'
 ]);
 
@@ -21,9 +27,9 @@ export async function onRequest(context) {
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) return response;
 
-  const pathname = new URL(context.request.url).pathname;
+  const pathname = new URL(context.request.url).pathname.replace(/\/$/, '') || '/';
   const needsCurrency = currencyPaths.has(pathname);
-  const needsBulkImport = pathname === '/profit-audit.html';
+  const needsBulkImport = pathname === '/profit-audit' || pathname === '/profit-audit.html';
 
   let html = await response.text();
   if (html.includes('</head>')) {
