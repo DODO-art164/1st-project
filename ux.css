@@ -1,5 +1,8 @@
 /* Usability layer: structure and interaction only. Existing visual theme remains in styles.css. */
 
+:where(a,button,input,summary):focus-visible{outline:3px solid rgba(19,111,99,.34);outline-offset:3px}
+input[aria-invalid="true"]{color:var(--danger)}
+
 .app-hero{padding:52px 0 34px}
 .app-hero-inner{max-width:820px}
 .app-hero h1{font-size:clamp(38px,6vw,66px);line-height:1.08;margin:18px 0}
@@ -21,10 +24,10 @@
 .workspace-content .calculator-card{box-shadow:none;margin:0;border-radius:18px}
 .workspace-content .calculator-head{padding:24px 26px}
 .workspace-content .calculator-layout{align-items:start}
-.workspace-content .result-panel{position:sticky;top:150px;align-self:start}
+.workspace-content .result-panel{position:sticky;top:150px;align-self:start;scroll-margin-top:150px}
 
 .input-section{border:0;padding:0;margin:0 0 24px}
-.input-section+ .input-section{padding-top:22px;border-top:1px solid var(--line)}
+.input-section+.input-section{padding-top:22px;border-top:1px solid var(--line)}
 .input-section legend{width:100%;padding:0 0 12px;font-weight:800;font-size:15px;color:var(--text)}
 .input-section-note{display:block;margin:-7px 0 13px;color:var(--muted);font-size:12px}
 .advanced-options{margin-top:20px;border:1px solid var(--line);border-radius:13px;background:var(--card-2)}
@@ -60,12 +63,13 @@
 .audit-toolbar .button{min-height:44px;padding:0 15px}
 .audit-help{margin:0 0 14px;color:var(--muted);font-size:13px}
 .audit-summary{position:sticky;top:78px;z-index:12;background:var(--bg);padding:10px 0}
+.row-remove{min-width:44px;min-height:44px;border-radius:10px}
 
 @media(max-width:900px){
   .workspace-content{padding:18px}
   .workspace-content .calculator-layout{grid-template-columns:1fr}
   .workspace-content .input-panel{border-right:0;border-bottom:1px solid var(--line)}
-  .workspace-content .result-panel{position:static}
+  .workspace-content .result-panel{position:static;scroll-margin-top:132px}
   .quick-next-grid{grid-template-columns:1fr}
   .audit-steps{grid-template-columns:1fr}
 }
@@ -108,4 +112,9 @@
   .audit-summary{grid-template-columns:1fr}
   .audit-toolbar,.audit-toolbar-group{display:grid;width:100%}
   .audit-toolbar .button{width:100%}
+}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
