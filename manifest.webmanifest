@@ -1,12 +1,35 @@
 {
+  "id": "/",
   "name": "FashionOps - 패션 셀러 수익 분석",
   "short_name": "FashionOps",
+  "description": "패션 브랜드와 온라인 쇼핑몰을 위한 손익·가격·광고·재고 분석 도구",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f5f7f9",
   "theme_color": "#ffffff",
   "lang": "ko-KR",
+  "categories": ["business", "finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "실제 순이익 계산",
+      "short_name": "순이익",
+      "url": "/#profit-calculator",
+      "icons": [{"src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml"}]
+    },
+    {
+      "name": "상품별 대량 손익 분석",
+      "short_name": "대량 분석",
+      "url": "/profit-audit.html",
+      "icons": [{"src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml"}]
+    },
+    {
+      "name": "주간 운영 체크리스트",
+      "short_name": "주간 점검",
+      "url": "/weekly-profit-check.html",
+      "icons": [{"src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml"}]
+    }
+  ],
   "icons": [
     {
       "src": "/favicon.svg",
