@@ -33,7 +33,10 @@ const nonAdPaths = new Set([
   '/terms', '/terms.html',
   '/contact', '/contact.html',
   '/about', '/about.html',
-  '/seller-profit-audit', '/seller-profit-audit.html'
+  '/seller-profit-audit', '/seller-profit-audit.html',
+  '/community-write', '/community-write.html',
+  '/community-admin', '/community-admin.html',
+  '/community-rules', '/community-rules.html'
 ]);
 
 function textContent(value = '') {
@@ -42,6 +45,16 @@ function textContent(value = '') {
 
 function escapeAttribute(value = '') {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
+function injectCommunityNav(html) {
+  if (/href=["']\/?community(?:\.html)?["']/i.test(html)) return html;
+  return html.replace(/(<nav\b[^>]*class=["'][^"']*\bmain-nav\b[^"']*["'][^>]*>)([\s\S]*?)(<\/nav>)/i, (_match, open, content, close) => {
+    const link = '<a href="/community.html">커뮤니티</a>';
+    const cta = content.match(/<a\b[^>]*class=["'][^"']*\bnav-cta\b[^"']*["'][^>]*>/i);
+    const updated = cta ? content.replace(cta[0], `${link}${cta[0]}`) : `${content}${link}`;
+    return `${open}${updated}${close}`;
+  });
 }
 
 function metadataFor(html, pathname, isErrorResponse) {
@@ -100,6 +113,7 @@ export async function onRequest(context) {
   const shouldInjectAds = !isErrorResponse && !nonAdPaths.has(pathname);
 
   let html = await response.text();
+  html = injectCommunityNav(html);
   if (html.includes('</head>')) {
     const tags = metadataFor(html, pathname, isErrorResponse);
     if (!html.includes('fonts.googleapis.com/css2?family=Noto+Sans+KR')) {
