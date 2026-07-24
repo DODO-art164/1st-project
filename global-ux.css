@@ -1,0 +1,45 @@
+/* Site-wide usability fixes loaded through Cloudflare Pages middleware. */
+
+.button,.calculate-button,.copy-button,.row-remove,.main-nav a{touch-action:manipulation}
+.result-panel{scroll-margin-top:96px}
+
+@media(max-width:720px){
+  .site-header{overflow:hidden}
+  .nav-wrap{gap:10px}
+  .brand{flex:0 0 auto}
+  .main-nav{
+    display:flex!important;
+    flex:1 1 auto;
+    max-width:calc(100vw - 150px);
+    gap:6px!important;
+    overflow-x:auto!important;
+    overscroll-behavior-x:contain;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+    justify-content:flex-start!important;
+    padding:7px 1px!important;
+  }
+  .main-nav::-webkit-scrollbar{display:none}
+  .main-nav a,
+  .main-nav a:not(.nav-cta),
+  .main-nav .nav-cta{
+    display:inline-flex!important;
+    flex:0 0 auto;
+    align-items:center;
+    min-height:40px;
+    padding:0 10px;
+    border-radius:9px;
+    white-space:nowrap;
+    font-size:12px;
+  }
+  .main-nav a:not(.nav-cta){border:1px solid transparent}
+  .main-nav a:focus-visible{border-color:var(--accent)}
+  .legal-card .hero-actions{display:grid}
+  .legal-card .hero-actions .button{width:100%}
+  .result-panel{scroll-margin-top:128px}
+}
+
+@media(max-width:420px){
+  .brand span:last-child{display:none}
+  .main-nav{max-width:calc(100vw - 62px)}
+}
