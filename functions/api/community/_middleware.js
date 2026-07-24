@@ -1,4 +1,4 @@
-// Protect FashionOps staff identity and reject oversized community write requests before they reach D1.
+// Protect FashionOps staff identity and reject unsafe community writes before they reach D1.
 const RESERVED_NICKNAME = /(fashion\s*ops|fashionops|운영\s*팀|관리자|매니저|moderator|administrator|\badmin\b)/i;
 const MAX_REQUEST_BYTES = 24000;
 
@@ -16,6 +16,27 @@ function json(data, status) {
 export async function onRequest(context) {
   const request = context.request;
   if (!['POST', 'PATCH', 'DELETE'].includes(request.method)) return context.next();
+
+  if (!context.env.COMMUNITY_HASH_SALT || context.env.COMMUNITY_HASH_SALT.length < 32) {
+    return json({
+      ok: false,
+      code: 'community_security_setup_required',
+      message: '커뮤니티 보안 환경설정이 완료되지 않았습니다.'
+    }, 503);
+  }
+
+  const pathname = new URL(request.url).pathname;
+  const createsPublicContent = request.method === 'POST' && (
+    pathname === '/api/community/posts'
+    || /^\/api\/community\/posts\/\d+\/comments$/.test(pathname)
+  );
+  if (createsPublicContent && !['true', 'false'].includes(context.env.COMMUNITY_REQUIRE_APPROVAL)) {
+    return json({
+      ok: false,
+      code: 'community_approval_setup_required',
+      message: '커뮤니티 공개 검수 정책을 먼저 설정해 주세요.'
+    }, 503);
+  }
 
   const contentLength = Number(request.headers.get('content-length') || 0);
   if (contentLength > MAX_REQUEST_BYTES) {
