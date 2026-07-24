@@ -86,6 +86,9 @@ requireText(middleware, 'injectCommunityNav', '미들웨어: 전역 커뮤니티
 for (const path of ['/community-write.html', '/community-admin.html', '/community-rules.html']) {
   requireText(middleware, path, `미들웨어: ${path} 광고 제외가 없습니다.`);
 }
+requireText(middleware, 'const isCommunityHome', '미들웨어: 커뮤니티 목록의 별도 광고 판단이 없습니다.');
+requireText(middleware, 'const communityReady = Boolean(context.env.DB)', '미들웨어: D1 미연결 커뮤니티 광고 차단이 없습니다.');
+requireText(middleware, '(!isCommunityHome || communityReady)', '미들웨어: 커뮤니티가 준비된 경우에만 광고를 허용하는 조건이 없습니다.');
 
 const worker = requireFile('service-worker.js');
 requireText(worker, 'fashionops-shell-v8', 'service-worker.js: 커뮤니티 캐시 정책이 반영된 최신 캐시 버전이 아닙니다.');
