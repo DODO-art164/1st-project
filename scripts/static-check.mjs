@@ -6,13 +6,8 @@ const errors = [];
 const warnings = [];
 const htmlFiles = readdirSync(root).filter((name) => extname(name) === '.html');
 
-function report(message) {
-  errors.push(message);
-}
-
-function read(path) {
-  return readFileSync(join(root, path), 'utf8');
-}
+function report(message) { errors.push(message); }
+function read(path) { return readFileSync(join(root, path), 'utf8'); }
 
 function localPath(rawValue) {
   const value = rawValue.trim();
@@ -29,6 +24,7 @@ for (const file of htmlFiles) {
   if (titleCount !== 1) report(`${file}: <title> 태그가 ${titleCount}개입니다.`);
   if (!/<html\s+lang=["'][^"']+["']/i.test(html)) report(`${file}: html lang 속성이 없습니다.`);
   if (!/<meta\s+name=["']viewport["']/i.test(html)) report(`${file}: viewport 메타태그가 없습니다.`);
+  if ((html.match(/<main\b/gi) || []).length !== (html.match(/<\/main>/gi) || []).length) report(`${file}: main 태그가 올바르게 닫히지 않았습니다.`);
 
   if (!['404.html', 'offline.html'].includes(file)) {
     if (!/<link\s+rel=["']canonical["']/i.test(html)) report(`${file}: canonical 링크가 없습니다.`);
@@ -60,7 +56,12 @@ if (!existsSync(sitemapPath)) {
     const path = match[1] || 'index.html';
     if (!existsSync(join(root, path))) report(`sitemap.xml: 존재하지 않는 경로가 포함되어 있습니다: /${match[1]}`);
   }
-  for (const requiredPath of ['/weekly-profit-check.html', '/online-store-profit-guide.html']) {
+  for (const requiredPath of [
+    '/weekly-profit-check.html',
+    '/online-store-profit-guide.html',
+    '/shopping-mall-fee-profit-guide.html',
+    '/break-even-roas-guide.html'
+  ]) {
     if (!sitemap.includes(requiredPath)) report(`sitemap.xml에 ${requiredPath}가 없습니다.`);
   }
 }
@@ -73,7 +74,28 @@ else if (read('ads.txt').trim() !== expectedAds) report('ads.txt 내용이 현�
 for (const file of htmlFiles) {
   const html = read(file);
   if (html.includes('contact@fashionops.ai')) report(`${file}: 운영하지 않는 이메일 주소가 남아 있습니다.`);
+  if (html.includes('online-store-net-profit-guide.html')) report(`${file}: 존재하지 않는 이전 가이드 주소가 남아 있습니다.`);
   if (/Google AdSense 광고 영역/i.test(html)) warnings.push(`${file}: 비어 있는 광고 자리 안내문이 남아 있습니다.`);
+}
+
+const indexHtml = read('index.html');
+if (indexHtml.includes('fonts.googleapis.com') || indexHtml.includes('fonts.gstatic.com')) report('index.html: 첫 화면을 지연시키는 외부 웹폰트가 다시 추가되었습니다.');
+if (!indexHtml.includes('id="calculator-workspace"')) report('index.html: 계산 작업영역 식별자가 없습니다.');
+if (!indexHtml.includes('ad-exclusion-zone')) report('index.html: 자동광고 제외 영역을 선택하기 위한 안정적인 클래스가 없습니다.');
+
+const resourcesHtml = read('resources.html');
+for (const path of ['online-store-profit-guide.html', 'shopping-mall-fee-profit-guide.html', 'break-even-roas-guide.html']) {
+  if (!resourcesHtml.includes(path)) report(`resources.html에 ${path} 내부 링크가 없습니다.`);
+}
+
+for (const guide of ['online-store-profit-guide.html', 'shopping-mall-fee-profit-guide.html', 'break-even-roas-guide.html']) {
+  if (!existsSync(join(root, guide))) {
+    report(`${guide}가 없습니다.`);
+    continue;
+  }
+  const content = read(guide);
+  if (content.length < 5000) warnings.push(`${guide}: 검색 유입용 본문이 충분히 상세한지 다시 검토하세요.`);
+  if (!content.includes('"@type":"Article"')) report(`${guide}: Article 구조화 데이터가 없습니다.`);
 }
 
 const requiredCurrencyScripts = ['app.js', 'bulk-profit.js', 'special-tools.js'];
@@ -92,9 +114,7 @@ if (existsSync(join(root, 'currency.js'))) {
   if (/characterData\s*:\s*true/i.test(currencySource)) report('currency.js: 모든 텍스트 변경을 감시하는 characterData observer가 다시 추가되었습니다.');
   if (/dispatchEvent\s*\(\s*new Event\s*\(\s*["']input/i.test(currencySource)) report('currency.js: 통화 변경 시 입력 이벤트를 대량 발생시키는 코드가 다시 추가되었습니다.');
   if (!currencySource.includes('formatterCache')) warnings.push('currency.js: Intl.NumberFormat 캐시가 없습니다.');
-} else {
-  report('currency.js가 없습니다.');
-}
+} else report('currency.js가 없습니다.');
 
 if (existsSync(join(root, 'bulk-profit.js'))) {
   const bulkSource = read('bulk-profit.js');
@@ -122,6 +142,8 @@ if (existsSync(join(root, 'service-worker.js'))) {
   if (!worker.includes("request.mode === 'navigate'")) report('service-worker.js: 문서 요청의 네트워크 우선 처리가 없습니다.');
   if (!worker.includes("caches.match('/offline.html')")) report('service-worker.js: 오프라인 복구 페이지가 연결되지 않았습니다.');
   if (!/fashionops-shell-v\d+/.test(worker)) report('service-worker.js: 버전이 지정된 캐시 이름이 없습니다.');
+  if (!worker.includes('navigationPreload.enable')) warnings.push('service-worker.js: 탐색 프리로드가 활성화되지 않았습니다.');
+  if (!worker.includes('!url.search')) report('service-worker.js: 공유 입력값이 포함된 쿼리 URL을 캐시에서 제외하지 않습니다.');
 }
 
 if (existsSync(join(root, 'manifest.webmanifest'))) {
@@ -131,15 +153,11 @@ if (existsSync(join(root, 'manifest.webmanifest'))) {
   } catch (error) {
     report(`manifest.webmanifest: JSON 문법 오류가 있습니다: ${error.message}`);
   }
-} else {
-  report('manifest.webmanifest가 없습니다.');
-}
+} else report('manifest.webmanifest가 없습니다.');
 
 if (existsSync(join(root, 'weekly-profit-check.html'))) {
   const weeklyHtml = read('weekly-profit-check.html');
-  if (/<label[^>]*class=["'][^"']*check-item[^"']*["'][^>]*>[\s\S]*?<a\b/i.test(weeklyHtml)) {
-    report('weekly-profit-check.html: 체크박스 label 안에 이동 링크가 중첩되어 있습니다.');
-  }
+  if (/<label[^>]*class=["'][^"']*check-item[^"']*["'][^>]*>[\s\S]*?<a\b/i.test(weeklyHtml)) report('weekly-profit-check.html: 체크박스 label 안에 이동 링크가 중첩되어 있습니다.');
   if (!/role=["']progressbar["']/i.test(weeklyHtml)) report('weekly-profit-check.html: 진행률 접근성 속성이 없습니다.');
 }
 
@@ -159,9 +177,8 @@ if (!existsSync(middlewarePath)) {
 }
 
 const koreanTemplatePath = join(root, 'profit-audit-template.csv');
-if (!existsSync(koreanTemplatePath)) {
-  report('한국어 CSV 양식이 없습니다.');
-} else {
+if (!existsSync(koreanTemplatePath)) report('한국어 CSV 양식이 없습니다.');
+else {
   const koreanTemplate = readFileSync(koreanTemplatePath, 'utf8');
   if (!koreanTemplate.startsWith('\ufeff')) report('한국어 CSV 양식에 Excel 호환 UTF-8 BOM이 없습니다.');
   if (!koreanTemplate.startsWith('\ufeff통화,상품명,판매가,원가')) report('한국어 CSV 양식의 통화·상품 헤더가 올바르지 않습니다.');
@@ -169,11 +186,8 @@ if (!existsSync(koreanTemplatePath)) {
 }
 
 const englishTemplatePath = join(root, 'profit-audit-template-en.csv');
-if (!existsSync(englishTemplatePath)) {
-  report('영문 CSV 양식이 없습니다.');
-} else if (!read('profit-audit-template-en.csv').startsWith('Currency,Product name,Price,Cost')) {
-  report('영문 CSV 양식 헤더가 올바르지 않습니다.');
-}
+if (!existsSync(englishTemplatePath)) report('영문 CSV 양식이 없습니다.');
+else if (!read('profit-audit-template-en.csv').startsWith('Currency,Product name,Price,Cost')) report('영문 CSV 양식 헤더가 올바르지 않습니다.');
 
 if (warnings.length) {
   console.warn('\nWarnings:');
