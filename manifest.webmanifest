@@ -1,16 +1,22 @@
 {
   "id": "/",
-  "name": "FashionOps - 패션 셀러 수익 분석",
+  "name": "FashionOps - 사업자 계산·커뮤니티",
   "short_name": "FashionOps",
-  "description": "패션 브랜드와 온라인 쇼핑몰을 위한 손익·가격·광고·재고 분석 도구",
+  "description": "온라인 사업자와 패션 셀러를 위한 손익·가격·광고·재고 분석 도구와 커뮤니티",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f5f7f9",
   "theme_color": "#ffffff",
   "lang": "ko-KR",
-  "categories": ["business", "finance", "productivity"],
+  "categories": ["business", "finance", "productivity", "social"],
   "shortcuts": [
+    {
+      "name": "사업자 커뮤니티",
+      "short_name": "커뮤니티",
+      "url": "/community.html",
+      "icons": [{"src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml"}]
+    },
     {
       "name": "실제 순이익 계산",
       "short_name": "순이익",
