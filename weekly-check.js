@@ -3,6 +3,7 @@
   const checkboxes = [...document.querySelectorAll('[data-check-id]')];
   const notes = document.getElementById('weekly-notes');
   const progress = document.getElementById('week-progress');
+  const progressTrack = document.getElementById('week-progress-track');
   const progressBar = document.getElementById('week-progress-bar');
   const status = document.getElementById('week-status');
   const streak = document.getElementById('week-streak');
@@ -81,6 +82,8 @@
     progress.textContent = `${checkedCount} / ${total} 완료`;
     progress.className = `result-badge ${isComplete ? 'good' : checkedCount ? 'warning' : 'neutral'}`;
     progressBar.style.width = `${Math.round(ratio * 100)}%`;
+    progressTrack?.setAttribute('aria-valuemax', String(total));
+    progressTrack?.setAttribute('aria-valuenow', String(checkedCount));
     status.textContent = isComplete
       ? '이번 주 운영 점검을 완료했습니다.'
       : checkedCount
