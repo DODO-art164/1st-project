@@ -33,8 +33,16 @@ jobs:
         run: |
           find . -type f -name '*.js' -not -path './.git/*' -not -path './functions/*' -print0 | xargs -0 -r -n1 node --check
 
-      - name: Check Cloudflare middleware syntax
-        run: node --input-type=module --check < functions/_middleware.js
+      - name: Check Cloudflare Pages Functions syntax
+        shell: bash
+        run: |
+          while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            node --input-type=module --check < "$file"
+          done < <(find functions -type f -name '*.js' -print0)
 
       - name: Check links, IDs, metadata, performance guards and AdSense files
         run: node scripts/static-check.mjs
+
+      - name: Check community schema, security, moderation and SEO
+        run: node scripts/community-check.mjs
