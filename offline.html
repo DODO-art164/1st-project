@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>오프라인 | FashionOps</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/ux.css">
+  <style>
+    .offline-main{min-height:75vh;display:grid;place-items:center;padding:40px 0}
+    .offline-card{max-width:680px;padding:34px;border:1px solid var(--line);border-radius:22px;background:var(--card);box-shadow:var(--shadow);text-align:center}
+    .offline-card h1{margin:8px 0 12px;font-size:clamp(30px,6vw,48px);letter-spacing:-.05em}
+    .offline-card p{color:var(--muted);line-height:1.75}
+    .offline-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:22px}
+  </style>
+</head>
+<body>
+  <header class="site-header"><div class="container nav-wrap"><a class="brand" href="/"><span class="brand-mark">F</span><span>FashionOps</span></a></div></header>
+  <main class="offline-main">
+    <div class="container">
+      <section class="offline-card">
+        <span class="section-kicker">OFFLINE</span>
+        <h1>인터넷 연결을 확인해 주세요.</h1>
+        <p>최근 열었던 페이지는 오프라인에서도 표시될 수 있습니다. 연결이 복구되면 다시 시도하거나 홈으로 이동하세요. 입력값과 저장한 계산은 이 브라우저에 그대로 남아 있습니다.</p>
+        <div class="offline-actions"><button class="button primary" type="button" onclick="location.reload()">다시 연결</button><a class="button secondary" href="/">홈으로 이동</a></div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
