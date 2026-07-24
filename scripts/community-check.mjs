@@ -49,7 +49,10 @@ requireText(schema, 'FashionOps 운영팀', 'community-schema.sql: 출처가 명
 requireText(schema, 'idx_posts_public_latest', 'community-schema.sql: 공개 게시글 조회 인덱스가 없습니다.');
 
 const guard = requireFile('functions/api/community/_middleware.js');
-for (const marker of ['RESERVED_NICKNAME', 'FashionOps', '운영', 'MAX_REQUEST_BYTES', 'request_too_large', 'nickname_reserved']) {
+for (const marker of [
+  'RESERVED_NICKNAME', 'FashionOps', '운영', 'MAX_REQUEST_BYTES', 'request_too_large', 'nickname_reserved',
+  'COMMUNITY_HASH_SALT', 'COMMUNITY_REQUIRE_APPROVAL', 'community_security_setup_required', 'community_approval_setup_required'
+]) {
   requireText(guard, marker, `커뮤니티 보호 미들웨어: ${marker} 처리가 없습니다.`);
 }
 
