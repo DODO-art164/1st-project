@@ -15,8 +15,6 @@
   const storageKey = 'fashionops-currency-v2';
   const formatterCache = new Map();
   let currentCurrency = 'KRW';
-  let localizationFrame = 0;
-  let calculatorPage = false;
 
   try {
     const saved = localStorage.getItem(storageKey) || localStorage.getItem('fashionops-currency-v1');
@@ -76,66 +74,10 @@
     const step = zeroDecimalCurrencies.has(currentCurrency) ? '1' : '0.01';
     document.querySelectorAll('[data-currency-input="true"]').forEach((input) => {
       input.step = step;
+      input.inputMode = 'decimal';
     });
     const selector = document.getElementById('fashionops-currency');
     if (selector) selector.value = currentCurrency;
-  }
-
-  function replaceWonText(text) {
-    return String(text).replace(/(-?[0-9][0-9,]*(?:\.[0-9]+)?)원/g, (_, raw) => {
-      const value = Number(raw.replaceAll(',', ''));
-      return format(value);
-    });
-  }
-
-  function localizeElement(root) {
-    if (!root) return;
-    if (root.nodeType === Node.TEXT_NODE) {
-      if (root.nodeValue?.includes('원')) root.nodeValue = replaceWonText(root.nodeValue);
-      return;
-    }
-    if (!(root instanceof Element) || root.matches('script,style,input,textarea,option')) return;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    while (walker.nextNode()) {
-      const node = walker.currentNode;
-      if (node.nodeValue?.includes('원')) node.nodeValue = replaceWonText(node.nodeValue);
-    }
-  }
-
-  function localizeMoneyOutputs() {
-    if (!calculatorPage) return;
-    const selectors = ['.result-panel', '.cost-breakdown', '.diagnosis'];
-    document.querySelectorAll(selectors.join(',')).forEach(localizeElement);
-  }
-
-  function scheduleLocalization() {
-    if (!calculatorPage || localizationFrame) return;
-    localizationFrame = requestAnimationFrame(() => {
-      localizationFrame = 0;
-      localizeMoneyOutputs();
-    });
-  }
-
-  function recalculateNonBulkPageOnce() {
-    const mainCalculators = ['calculateProfit', 'calculatePrice', 'calculateBreakEven', 'calculateInventory'];
-    let mainFound = false;
-    mainCalculators.forEach((name) => {
-      if (typeof window[name] === 'function') {
-        window[name]();
-        mainFound = true;
-      }
-    });
-    if (mainFound) return;
-
-    const specialByTool = {
-      startup: 'calcStartup',
-      cost: 'calcClothingCost',
-      discount: 'calcDiscount',
-      roas: 'calcRoas',
-      marketplace: 'calcMarketplace'
-    };
-    const functionName = specialByTool[document.body.dataset.tool];
-    if (functionName && typeof window[functionName] === 'function') window[functionName]();
   }
 
   function setCurrency(nextCurrency) {
@@ -144,11 +86,9 @@
     currentCurrency = normalized;
     try { localStorage.setItem(storageKey, currentCurrency); } catch (error) {}
     updateCurrencyUnits();
-
-    const isBulkPage = Boolean(document.getElementById('product-rows'));
-    if (!isBulkPage) recalculateNonBulkPageOnce();
-    window.dispatchEvent(new CustomEvent('fashionops:currencychange', { detail: { currency: currentCurrency } }));
-    scheduleLocalization();
+    window.dispatchEvent(new CustomEvent('fashionops:currencychange', {
+      detail: { currency: currentCurrency }
+    }));
   }
 
   window.FashionOpsCurrency = {
@@ -162,7 +102,6 @@
     const hasMoneyCalculator = [...document.querySelectorAll('.input-wrap i')]
       .some((unit) => unit.textContent.trim() === '원' || supportedCodes.has(unit.textContent.trim()))
       || Boolean(document.querySelector('.bulk-price'));
-    calculatorPage = hasMoneyCalculator;
     if (!hasMoneyCalculator || document.getElementById('fashionops-currency')) return;
 
     const target = document.querySelector('.workspace-section .container, #audit .container, .tools-section .container');
@@ -209,21 +148,9 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     mountCurrencySelector();
-    markCurrencyInputs();
     updateCurrencyUnits();
     improveTooltips();
     addEnglishCsvTemplate();
-    scheduleLocalization();
-
-    document.addEventListener('input', (event) => {
-      if (event.target.matches('[data-currency-input="true"]')) scheduleLocalization();
-    });
-
-    document.addEventListener('click', (event) => {
-      if (event.target.closest('#add-row, #load-sample, #clear-rows')) {
-        requestAnimationFrame(() => updateCurrencyUnits());
-      }
-    });
 
     const tableBody = document.getElementById('product-rows');
     if (tableBody) {
