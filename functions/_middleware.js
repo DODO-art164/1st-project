@@ -16,13 +16,12 @@ export async function onRequest(context) {
     if (!html.includes('name="google-adsense-account"')) {
       tags.push(ADSENSE_META);
     }
-    if (tags.length) {
-      html = html.replace('</head>', `  ${tags.join('\n  ')}\n</head>`);
-    }
+    if (tags.length) html = html.replace('</head>', `  ${tags.join('\n  ')}\n</head>`);
   }
 
   const headers = new Headers(response.headers);
   headers.delete('content-length');
+  headers.delete('etag');
 
   return new Response(html, {
     status: response.status,
