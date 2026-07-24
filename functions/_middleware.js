@@ -1,6 +1,6 @@
 const ADSENSE_SCRIPT = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249" crossorigin="anonymous"></script>';
 const ADSENSE_META = '<meta name="google-adsense-account" content="ca-pub-1158392779506249">';
-const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=4">';
+const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=5">';
 const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=3" defer></script>';
 const GLOBAL_CURRENCY = '<script src="/currency.js?v=4"></script>';
 const BULK_IMPORT_SCRIPT = '<script src="/bulk-import.js?v=1" defer></script>';
