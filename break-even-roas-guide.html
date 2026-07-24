@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>손익분기 ROAS 계산법 | 광고 매출이 아니라 이익 판단하기 | FashionOps</title>
+  <meta name="description" content="상품 마진, 수수료, 배송비와 반품률을 반영해 손익분기 ROAS를 계산하고 광고 캠페인이 실제로 이익을 만드는지 판단하는 방법을 설명합니다.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://1st-project-3aj.pages.dev/break-even-roas-guide.html">
+  <link rel="icon" href="favicon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .article-wrap{padding:34px 0 84px}.article-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:28px;align-items:start}.article-card,.article-side{padding:28px;border:1px solid var(--line);border-radius:20px;background:var(--card)}.article-card h1{margin:8px 0 15px;font-size:clamp(34px,5vw,52px);line-height:1.15;letter-spacing:-.055em}.article-card h2{margin:42px 0 12px;font-size:27px;line-height:1.3;letter-spacing:-.04em}.article-card h3{margin:27px 0 8px;font-size:19px}.article-card p,.article-card li{color:var(--muted);line-height:1.85}.article-card strong{color:var(--text)}.formula{margin:20px 0;padding:19px;border:1px solid #bcd8ce;border-radius:15px;background:var(--accent-soft);font-weight:800;line-height:1.75}.example{margin:20px 0;padding:20px;border:1px solid var(--line);border-radius:15px;background:var(--card-2)}.example b{display:block;margin-bottom:8px}.article-actions{display:flex;gap:10px;flex-wrap:wrap;margin:28px 0}.article-side{position:sticky;top:88px}.article-side b{display:block;margin-bottom:10px}.article-side a{display:block;padding:10px 0;border-bottom:1px solid var(--line);color:var(--muted);font-size:13px}.article-side a:last-child{border-bottom:0}.checklist{padding-left:20px}.decision-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.decision-grid div{padding:17px;border:1px solid var(--line);border-radius:14px;background:var(--card-2)}.decision-grid b{display:block;margin-bottom:6px}.decision-grid span{color:var(--muted);font-size:13px;line-height:1.65}.faq details{padding:15px 0;border-bottom:1px solid var(--line)}.faq summary{cursor:pointer;font-weight:800}.legal-note{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);font-size:13px}@media(max-width:900px){.article-layout{grid-template-columns:1fr}.article-side{position:static;order:-1}}@media(max-width:700px){.decision-grid{grid-template-columns:1fr}}@media(max-width:620px){.article-card,.article-side{padding:21px}.article-actions{display:grid}.article-actions .button{width:100%}}
+  </style>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Article","headline":"손익분기 ROAS 계산법: 광고 매출이 아니라 이익 판단하기","description":"상품 마진과 변동비를 반영해 손익분기 ROAS를 계산하고 광고 캠페인의 실제 이익을 판단하는 방법","inLanguage":"ko-KR","author":{"@type":"Organization","name":"FashionOps"},"publisher":{"@type":"Organization","name":"FashionOps"},"mainEntityOfPage":"https://1st-project-3aj.pages.dev/break-even-roas-guide.html","datePublished":"2026-07-24","dateModified":"2026-07-24"}
+  </script>
+</head>
+<body>
+  <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">F</span><span>FashionOps</span></a><nav class="main-nav" aria-label="주요 메뉴"><a href="index.html#tools">계산기</a><a href="profit-audit.html">대량 분석</a><a href="resources.html">전체 도구</a></nav></div></header>
+  <main class="article-wrap">
+    <div class="container article-layout">
+      <article class="article-card">
+        <a class="back-link" href="resources.html">← 전체 도구와 가이드</a>
+        <span class="section-kicker">광고 손익 가이드</span>
+        <h1>ROAS가 높아도<br>광고에서 손해 볼 수 있습니다</h1>
+        <p>ROAS는 광고비 대비 광고 매출을 보여주는 지표입니다. 하지만 매출에는 상품 원가, 플랫폼 수수료, 결제 수수료, 배송비, 반품 손실이 반영되지 않습니다. 따라서 ROAS가 높아 보여도 상품의 실제 이익 구조가 약하면 광고를 집행할수록 손실이 커질 수 있습니다. 광고 예산을 늘리기 전에 자신의 상품 구조에 맞는 <strong>손익분기 ROAS</strong>를 먼저 계산해야 합니다.</p>
+        <div class="article-actions"><a class="button primary" href="roas-calculator.html">손익분기 ROAS 계산</a><a class="button secondary" href="index.html#profit-calculator">상품 순이익 확인</a></div>
+
+        <h2 id="meaning">ROAS와 손익분기 ROAS의 차이</h2>
+        <p><strong>현재 ROAS</strong>는 광고비로 얼마의 매출을 만들었는지 보여줍니다. 예를 들어 광고비 100만원으로 광고 매출 400만원을 만들었다면 ROAS는 400%입니다. 이 수치만으로는 이익 여부를 알 수 없습니다.</p>
+        <p><strong>손익분기 ROAS</strong>는 광고비를 제외한 나머지 비용을 모두 부담한 뒤, 광고비까지 정확히 회수하는 최소 ROAS입니다. 현재 ROAS가 손익분기 ROAS보다 높아야 광고가 이익에 기여할 가능성이 있습니다.</p>
+        <div class="formula">현재 ROAS = 광고 매출 ÷ 광고비 × 100<br>손익분기 ROAS = 광고 매출 ÷ 광고에 사용할 수 있는 최대 비용 × 100</div>
+
+        <h2 id="margin">광고에 사용할 수 있는 최대 비용부터 구하세요</h2>
+        <p>판매가 전체를 광고비로 사용할 수는 없습니다. 먼저 광고비를 제외한 상품의 공헌이익을 계산해야 합니다. 공헌이익은 판매 한 건이 고정비와 이익에 기여할 수 있는 금액입니다.</p>
+        <div class="formula">광고 전 공헌이익 = 예상 매출 − 상품 원가 − 수수료 − 배송·포장비 − 반품 손실<br>손익분기 광고비 = 광고 전 공헌이익</div>
+        <p>광고 전 공헌이익이 20,000원인 상품은 판매 한 건을 만들기 위해 광고비를 20,000원보다 많이 쓰면, 다른 조건이 같을 때 광고 단계에서 손실이 발생합니다. 실제 운영에서는 인건비와 고정비까지 고려해 손익분기점보다 더 높은 목표 ROAS를 설정하는 것이 안전합니다.</p>
+
+        <h2 id="example">판매가 79,000원 상품 예시</h2>
+        <div class="example"><b>설명을 위한 예시 조건</b><p>판매가 79,000원, 상품 원가 30,000원, 수수료 합계 13.3%, 배송·포장비 4,500원, 예상 반품률 8%와 반품 추가 손실을 가정합니다. 특정 플랫폼이나 업종의 권장값이 아니라 계산 구조를 이해하기 위한 예시입니다.</p></div>
+        <p>먼저 반품을 고려한 예상 매출에서 원가와 수수료, 배송·포장비와 반품 손실을 뺍니다. 남은 금액이 광고에 사용할 수 있는 최대 비용입니다. 이 금액이 작을수록 손익분기 ROAS는 높아집니다.</p>
+        <p>예를 들어 광고 전 공헌이익률이 25%라면 단순화한 손익분기 ROAS는 약 400%입니다. 공헌이익률이 40%라면 약 250%입니다. 같은 ROAS 300%라도 첫 번째 상품은 손실 가능성이 있고 두 번째 상품은 이익을 남길 수 있습니다.</p>
+
+        <h2 id="variables">손익분기 ROAS를 크게 바꾸는 요소</h2>
+        <h3>상품 원가율</h3>
+        <p>원가율이 높을수록 광고에 사용할 수 있는 금액이 줄어 손익분기 ROAS가 높아집니다. 광고 소재 개선만으로 해결되지 않는다면 판매가나 원가 구조를 함께 검토해야 합니다.</p>
+        <h3>플랫폼·결제 수수료</h3>
+        <p>광고 매출이 발생한 채널의 실제 정산 수수료를 사용해야 합니다. 수수료가 다른 채널의 매출을 한꺼번에 합치면 손익분기점이 왜곡될 수 있습니다.</p>
+        <h3>할인과 쿠폰</h3>
+        <p>정상가가 아니라 고객이 실제로 결제한 금액을 기준으로 계산해야 합니다. 광고 캠페인 기간에 할인율이 높아지면 같은 광고비라도 손익분기 ROAS가 상승합니다.</p>
+        <h3>반품률</h3>
+        <p>패션 상품은 사이즈와 핏 때문에 반품률 변화가 이익에 큰 영향을 줄 수 있습니다. 광고로 신규 고객 비중이 늘면서 반품률이 달라지는지도 확인해야 합니다.</p>
+        <h3>배송비와 무료배송</h3>
+        <p>고객에게 무료인 배송도 판매자에게는 비용입니다. 객단가가 낮은 상품은 배송비가 공헌이익률을 크게 낮출 수 있습니다.</p>
+
+        <h2 id="decision">현재 ROAS를 어떻게 해석해야 하나요?</h2>
+        <div class="decision-grid">
+          <div><b>현재 ROAS가 손익분기보다 낮음</b><span>예산 확대를 멈추고 상품 마진, 타깃, 소재와 랜딩페이지 문제를 구분합니다.</span></div>
+          <div><b>손익분기와 비슷함</b><span>광고 단계에서는 거의 남지 않습니다. 반품과 고정비를 고려하면 실제 이익은 부족할 수 있습니다.</span></div>
+          <div><b>손익분기보다 충분히 높음</b><span>예산 확대 전 전환율, 재고, 반품률이 규모 확대 후에도 유지되는지 확인합니다.</span></div>
+        </div>
+
+        <h2 id="workflow">광고 캠페인은 이 순서로 점검하세요</h2>
+        <ol class="checklist">
+          <li>광고비와 광고 매출의 기간과 기여 기준을 맞춥니다.</li>
+          <li>상품별 실제 결제금액과 판매 채널 수수료를 확인합니다.</li>
+          <li>광고비를 제외한 공헌이익과 손익분기 ROAS를 계산합니다.</li>
+          <li>현재 ROAS와 손익분기 ROAS의 차이를 확인합니다.</li>
+          <li>성과가 낮다면 광고 문제와 상품 마진 문제를 분리합니다.</li>
+          <li>예산을 확대할 때 재고와 반품률 변화를 함께 추적합니다.</li>
+        </ol>
+        <p>캠페인별 매출만 보면 잘 팔리는 광고에 예산을 몰아줄 수 있습니다. 그러나 상품별 공헌이익이 다르면 같은 매출을 만든 캠페인의 실제 이익도 달라집니다. 여러 상품을 광고한다면 상품별 순이익과 판매량을 함께 비교해야 합니다.</p>
+        <div class="article-actions"><a class="button primary" href="roas-calculator.html">ROAS 손익 계산</a><a class="button secondary" href="profit-audit.html">상품별 이익 비교</a><a class="button secondary" href="weekly-profit-check.html">주간 광고 점검</a></div>
+
+        <section class="faq">
+          <h2 id="faq">자주 묻는 질문</h2>
+          <details><summary>ROAS가 몇 퍼센트면 좋은 광고인가요?</summary><p>모든 상품에 공통으로 적용되는 숫자는 없습니다. 상품 원가, 수수료, 할인, 배송과 반품 구조에 따라 손익분기 ROAS가 달라집니다. 자신의 상품 기준으로 계산해야 합니다.</p></details>
+          <details><summary>광고비가 0원일 때 ROAS는 어떻게 보나요?</summary><p>광고비가 없으면 ROAS를 계산할 수 없습니다. 자연 유입 매출과 광고 매출을 분리해 기록하고 광고를 시작한 기간부터 같은 기준으로 비교하세요.</p></details>
+          <details><summary>현재 ROAS가 손익분기보다 높은데도 현금이 부족한 이유는 무엇인가요?</summary><p>고정비, 세금, 광고비 선결제, 추가 발주와 정산 주기 때문에 광고 단계에서 이익이 나도 현금흐름은 부족할 수 있습니다. 월 손익분기점과 재고 계획을 함께 확인해야 합니다.</p></details>
+        </section>
+        <p class="legal-note">이 가이드는 일반적인 사업 판단을 위한 설명입니다. 광고 플랫폼의 기여 모델, 세금, 부가세와 채널 정산 규칙에 따라 실제 결과는 달라질 수 있습니다.</p>
+      </article>
+
+      <aside class="article-side" aria-label="페이지 목차와 관련 도구">
+        <b>이 페이지에서 확인할 내용</b>
+        <a href="#meaning">ROAS와 손익분기 차이</a><a href="#margin">광고 가능 비용</a><a href="#example">계산 예시</a><a href="#variables">영향 요소</a><a href="#decision">결과 해석</a><a href="#workflow">점검 순서</a><a href="#faq">자주 묻는 질문</a>
+        <b style="margin-top:22px">바로 계산하기</b>
+        <a href="roas-calculator.html">광고 ROAS 계산기</a><a href="index.html#profit-calculator">실제 순이익 계산기</a><a href="profit-audit.html">상품별 대량 손익 분석</a>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 FashionOps</span><span><a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a></span></div></footer>
+</body>
+</html>
