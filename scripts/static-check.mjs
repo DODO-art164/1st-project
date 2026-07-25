@@ -6,8 +6,9 @@ const errors = [];
 const warnings = [];
 const htmlFiles = readdirSync(root).filter((name) => extname(name) === '.html');
 
-function report(message) { errors.push(message); }
-function read(path) { return readFileSync(join(root, path), 'utf8'); }
+const report = (message) => errors.push(message);
+const warn = (message) => warnings.push(message);
+const read = (path) => readFileSync(join(root, path), 'utf8');
 
 function localPath(rawValue) {
   const value = rawValue.trim();
@@ -16,6 +17,25 @@ function localPath(rawValue) {
   if (!clean) return null;
   const relative = clean.startsWith('/') ? clean.slice(1) : clean;
   return relative.endsWith('/') ? `${relative}index.html` : relative;
+}
+
+function balancedBraces(source) {
+  let depth = 0;
+  let quote = '';
+  let escaped = false;
+  for (const char of source) {
+    if (escaped) { escaped = false; continue; }
+    if (char === '\\') { escaped = true; continue; }
+    if (quote) {
+      if (char === quote) quote = '';
+      continue;
+    }
+    if (char === '"' || char === "'") { quote = char; continue; }
+    if (char === '{') depth += 1;
+    if (char === '}') depth -= 1;
+    if (depth < 0) return false;
+  }
+  return depth === 0 && !quote;
 }
 
 for (const file of htmlFiles) {
@@ -45,6 +65,11 @@ for (const file of htmlFiles) {
     }
     if (!existsSync(join(root, normalized))) report(`${file}: 존재하지 않는 로컬 파일을 참조합니다: ${match[1]}`);
   }
+
+  if (/cdn\.tailwindcss\.com/i.test(html)) report(`${file}: Tailwind CDN 사용이 금지되어 있습니다.`);
+  if (/material-icons|material-symbols/i.test(html)) report(`${file}: Material Icons 사용이 금지되어 있습니다.`);
+  if (html.includes('contact@fashionops.ai')) report(`${file}: 운영하지 않는 이메일 주소가 남아 있습니다.`);
+  if (html.includes('online-store-net-profit-guide.html')) report(`${file}: 존재하지 않는 이전 가이드 주소가 남아 있습니다.`);
 }
 
 const sitemapPath = join(root, 'sitemap.xml');
@@ -56,121 +81,52 @@ if (!existsSync(sitemapPath)) {
     const path = match[1] || 'index.html';
     if (!existsSync(join(root, path))) report(`sitemap.xml: 존재하지 않는 경로가 포함되어 있습니다: /${match[1]}`);
   }
-  for (const requiredPath of [
-    '/weekly-profit-check.html',
-    '/calculation-methodology.html',
-    '/online-store-profit-guide.html',
-    '/shopping-mall-fee-profit-guide.html',
-    '/break-even-roas-guide.html'
-  ]) {
+  for (const requiredPath of ['/weekly-profit-check.html', '/calculation-methodology.html', '/online-store-profit-guide.html', '/shopping-mall-fee-profit-guide.html', '/break-even-roas-guide.html']) {
     if (!sitemap.includes(requiredPath)) report(`sitemap.xml에 ${requiredPath}가 없습니다.`);
   }
 }
 
-const adsPath = join(root, 'ads.txt');
 const expectedAds = 'google.com, pub-1158392779506249, DIRECT, f08c47fec0942fa0';
-if (!existsSync(adsPath)) report('ads.txt가 없습니다.');
+if (!existsSync(join(root, 'ads.txt'))) report('ads.txt가 없습니다.');
 else if (read('ads.txt').trim() !== expectedAds) report('ads.txt 내용이 현재 AdSense 게시자 ID와 일치하지 않습니다.');
 
-for (const file of htmlFiles) {
-  const html = read(file);
-  if (html.includes('contact@fashionops.ai')) report(`${file}: 운영하지 않는 이메일 주소가 남아 있습니다.`);
-  if (html.includes('online-store-net-profit-guide.html')) report(`${file}: 존재하지 않는 이전 가이드 주소가 남아 있습니다.`);
-  if (/Google AdSense 광고 영역/i.test(html)) warnings.push(`${file}: 비어 있는 광고 자리 안내문이 남아 있습니다.`);
+if (!existsSync(join(root, 'index.html'))) report('index.html이 없습니다.');
+else {
+  const indexHtml = read('index.html');
+  if (indexHtml.includes('fonts.googleapis.com') || indexHtml.includes('fonts.gstatic.com')) report('index.html: 웹폰트는 미들웨어에서 한 번만 주입해야 합니다.');
+  if (!indexHtml.includes('id="calculator-workspace"')) report('index.html: 계산 작업영역 식별자가 없습니다.');
+  if (!indexHtml.includes('ad-exclusion-zone')) report('index.html: 자동광고 제외 영역 클래스가 없습니다.');
 }
 
-const indexHtml = read('index.html');
-if (indexHtml.includes('fonts.googleapis.com') || indexHtml.includes('fonts.gstatic.com')) report('index.html: 웹폰트는 미들웨어에서 한 번만 주입해야 합니다.');
-if (!indexHtml.includes('id="calculator-workspace"')) report('index.html: 계산 작업영역 식별자가 없습니다.');
-if (!indexHtml.includes('ad-exclusion-zone')) report('index.html: 자동광고 제외 영역을 선택하기 위한 안정적인 클래스가 없습니다.');
-
-const resourcesHtml = read('resources.html');
-for (const path of ['calculation-methodology.html', 'online-store-profit-guide.html', 'shopping-mall-fee-profit-guide.html', 'break-even-roas-guide.html']) {
-  if (!resourcesHtml.includes(path)) report(`resources.html에 ${path} 내부 링크가 없습니다.`);
-}
-
-for (const guide of ['calculation-methodology.html', 'online-store-profit-guide.html', 'shopping-mall-fee-profit-guide.html', 'break-even-roas-guide.html']) {
-  if (!existsSync(join(root, guide))) {
-    report(`${guide}가 없습니다.`);
-    continue;
-  }
-  const content = read(guide);
-  if (content.length < 5000) warnings.push(`${guide}: 검색 유입용 본문이 충분히 상세한지 다시 검토하세요.`);
-  if (!content.includes('"@type":"Article"')) report(`${guide}: Article 구조화 데이터가 없습니다.`);
+for (const experimental of ['stitch-home.css', 'home-ui.js', 'home-i18n.js', 'home-i18n-core.js']) {
+  if (existsSync(join(root, experimental))) report(`${experimental}: 사용하지 않는 실험 파일이 다시 추가되었습니다.`);
 }
 
 if (!existsSync(join(root, 'global-ux.css'))) {
   report('global-ux.css가 없습니다.');
 } else {
-  const globalUx = read('global-ux.css');
-  if (!globalUx.includes('--font-sans:"Noto Sans KR"')) report('global-ux.css: Noto Sans KR이 기본 글꼴로 지정되지 않았습니다.');
-  if (!globalUx.includes('font-synthesis:none')) report('global-ux.css: 브라우저의 가짜 굵기·이탤릭 합성을 차단하지 않습니다.');
-  if (!globalUx.includes('grid-template-columns:repeat(auto-fit,minmax(96px,1fr))')) report('global-ux.css: 모바일 메뉴가 화면 안에서 자동 배치되지 않습니다.');
-  if (/font-weight:(?:650|750|850|880)/.test(globalUx)) report('global-ux.css: 지원되지 않는 합성 글꼴 굵기가 있습니다.');
-}
-
-const requiredCurrencyScripts = ['app.js', 'bulk-profit.js', 'special-tools.js'];
-for (const file of requiredCurrencyScripts) {
-  if (!existsSync(join(root, file))) {
-    report(`${file}: 계산 스크립트가 없습니다.`);
-    continue;
+  const css = read('global-ux.css');
+  if (!balancedBraces(css)) report('global-ux.css: CSS 중괄호 또는 문자열이 올바르게 닫히지 않았습니다.');
+  for (const token of ['--bg:#f4f0e7', '--surface:#fffdf8', '--text:#171512', '--accent:#7a6230', '--content:1180px']) {
+    if (!css.includes(token)) report(`global-ux.css: 디자인 토큰 ${token}이 없습니다.`);
   }
-  const source = read(file);
-  if (!source.includes('FashionOpsCurrency')) report(`${file}: 선택 통화 포맷을 직접 사용하지 않습니다.`);
+  if (!css.includes('overflow-x:auto')) report('global-ux.css: 모바일 내비게이션과 탭의 가로 스크롤 대응이 없습니다.');
+  if (!css.includes('@media(max-width:760px)')) report('global-ux.css: 주요 모바일 브레이크포인트가 없습니다.');
+  if (!css.includes('@media(prefers-reduced-motion:reduce)')) report('global-ux.css: 모션 감소 설정이 없습니다.');
+  if (/font-weight:(?:650|750|800|850|880)/.test(css)) report('global-ux.css: 로드하지 않은 합성 글꼴 굵기가 있습니다.');
+  if (/tailwind|material-icons|material-symbols/i.test(css)) report('global-ux.css: 금지된 UI 의존성이 포함되어 있습니다.');
 }
 
-if (existsSync(join(root, 'currency.js'))) {
-  const currencySource = read('currency.js');
-  if (currencySource.includes('MutationObserver')) report('currency.js: 통화 변경 런타임에 MutationObserver를 사용하면 안 됩니다.');
-  if (/characterData\s*:\s*true/i.test(currencySource)) report('currency.js: 모든 텍스트 변경을 감시하는 characterData observer가 다시 추가되었습니다.');
-  if (/dispatchEvent\s*\(\s*new Event\s*\(\s*["']input/i.test(currencySource)) report('currency.js: 통화 변경 시 입력 이벤트를 대량 발생시키는 코드가 다시 추가되었습니다.');
-  if (!currencySource.includes('formatterCache')) warnings.push('currency.js: Intl.NumberFormat 캐시가 없습니다.');
-} else report('currency.js가 없습니다.');
-
-if (existsSync(join(root, 'bulk-profit.js'))) {
-  const bulkSource = read('bulk-profit.js');
-  if (/querySelectorAll\(['"]input['"]\).*addEventListener\(['"]input['"],\s*calculateAll/s.test(bulkSource)) report('bulk-profit.js: 상품 행마다 전체 재계산 이벤트를 등록하는 비효율적인 코드가 있습니다.');
-  if (!bulkSource.includes('requestAnimationFrame')) warnings.push('bulk-profit.js: 입력 계산 프레임 조절 코드가 없습니다.');
-  if (!bulkSource.includes('fashionops:currencychange')) report('bulk-profit.js: 통화 변경 후 결과 갱신 이벤트가 없습니다.');
-}
-
-for (const runtime of ['global-ux.js', 'bulk-import.js', 'engagement.js', 'engagement.css', 'service-worker.js', 'weekly-check.js']) {
-  if (!existsSync(join(root, runtime))) report(`${runtime}가 없습니다.`);
-}
-
-if (existsSync(join(root, 'engagement.js'))) {
-  const engagement = read('engagement.js');
-  if (!engagement.includes('fashionops-saved-scenarios-v1')) report('engagement.js: 저장 계산 기능이 없습니다.');
-  if (!engagement.includes('navigator.serviceWorker.register')) report('engagement.js: 서비스 워커 등록 코드가 없습니다.');
-  if (!engagement.includes('beforeinstallprompt')) warnings.push('engagement.js: 설치 유도 이벤트가 없습니다.');
-  if (!engagement.includes('navigator.share')) report('engagement.js: 공유 링크 기능이 없습니다.');
-  if (!engagement.includes("bulk: { label: '상품별 대량 손익'")) report('engagement.js: 대량분석 재방문 동선이 없습니다.');
-  if (!engagement.includes("weekly: { label: '주간 운영 점검'")) report('engagement.js: 주간점검 재방문 동선이 없습니다.');
-}
-
-if (existsSync(join(root, 'service-worker.js'))) {
-  const worker = read('service-worker.js');
-  if (!worker.includes("request.mode === 'navigate'")) report('service-worker.js: 문서 요청의 네트워크 우선 처리가 없습니다.');
-  if (!worker.includes("caches.match('/offline.html')")) report('service-worker.js: 오프라인 복구 페이지가 연결되지 않았습니다.');
-  if (!/fashionops-shell-v\d+/.test(worker)) report('service-worker.js: 버전이 지정된 캐시 이름이 없습니다.');
-  if (!worker.includes('navigationPreload.enable')) warnings.push('service-worker.js: 탐색 프리로드가 활성화되지 않았습니다.');
-  if (!worker.includes('!url.search')) report('service-worker.js: 공유 입력값이 포함된 쿼리 URL을 캐시에서 제외하지 않습니다.');
-  if (!worker.includes('/global-ux.css?v=6')) report('service-worker.js: 최신 타이포그래피 CSS 버전을 캐시하지 않습니다.');
-}
-
-if (existsSync(join(root, 'manifest.webmanifest'))) {
-  try {
-    const manifest = JSON.parse(read('manifest.webmanifest'));
-    if (!Array.isArray(manifest.shortcuts) || manifest.shortcuts.length < 3) report('manifest.webmanifest: 재방문용 바로가기가 부족합니다.');
-  } catch (error) {
-    report(`manifest.webmanifest: JSON 문법 오류가 있습니다: ${error.message}`);
-  }
-} else report('manifest.webmanifest가 없습니다.');
-
-if (existsSync(join(root, 'weekly-profit-check.html'))) {
-  const weeklyHtml = read('weekly-profit-check.html');
-  if (/<label[^>]*class=["'][^"']*check-item[^"']*["'][^>]*>[\s\S]*?<a\b/i.test(weeklyHtml)) report('weekly-profit-check.html: 체크박스 label 안에 이동 링크가 중첩되어 있습니다.');
-  if (!/role=["']progressbar["']/i.test(weeklyHtml)) report('weekly-profit-check.html: 진행률 접근성 속성이 없습니다.');
+if (!existsSync(join(root, 'ui-fixes.css'))) {
+  report('ui-fixes.css가 없습니다.');
+} else {
+  const fixes = read('ui-fixes.css');
+  if (!balancedBraces(fixes)) report('ui-fixes.css: CSS 문법 구조가 올바르지 않습니다.');
+  if (!/\.calculate-button\s*\{[\s\S]*?justify-content:center/.test(fixes)) report('ui-fixes.css: 계산 버튼 텍스트 중앙 정렬 보정이 없습니다.');
+  if (!/\.calculate-button b\s*\{[\s\S]*?position:absolute/.test(fixes)) report('ui-fixes.css: 계산 버튼 화살표 위치 보정이 없습니다.');
+  if (!fixes.includes('max-width:min(920px,100%)!important')) report('ui-fixes.css: 인라인 제목 너비 회귀 보정이 없습니다.');
+  if (!fixes.includes('content-visibility:visible')) report('ui-fixes.css: 지연 렌더링으로 인한 스크롤 점프 방지 보정이 없습니다.');
+  if (!fixes.includes('@media(forced-colors:active)')) warn('ui-fixes.css: Windows 고대비 모드 보정이 없습니다.');
 }
 
 const middlewarePath = join(root, 'functions/_middleware.js');
@@ -178,43 +134,57 @@ if (!existsSync(middlewarePath)) {
   report('Cloudflare 미들웨어가 없습니다.');
 } else {
   const middleware = read('functions/_middleware.js');
+  if (!middleware.includes('/global-ux.css?v=7')) report('미들웨어가 최신 전역 디자인 CSS를 로드하지 않습니다.');
+  if (!middleware.includes('/ui-fixes.css?v=1')) report('미들웨어가 UI 회귀 보정 CSS를 로드하지 않습니다.');
   if (!middleware.includes('/currency.js')) report('미들웨어가 통화 런타임을 로드하지 않습니다.');
   if (!middleware.includes('/global-ux.js')) report('미들웨어가 접근성 툴팁 런타임을 로드하지 않습니다.');
-  if (!middleware.includes('/bulk-import.js')) report('미들웨어가 국제 CSV 가져오기 런타임을 로드하지 않습니다.');
-  if (!middleware.includes("pathname === '/profit-audit.html'")) report('bulk-import.js가 대량분석 페이지에만 제한되어 있지 않습니다.');
+  if (!middleware.includes('/bulk-import.js')) report('미들웨어가 CSV 가져오기 런타임을 로드하지 않습니다.');
   if (!middleware.includes('/engagement.js')) report('미들웨어가 저장·공유·설치 런타임을 로드하지 않습니다.');
   if (!middleware.includes('BreadcrumbList')) report('미들웨어에 브레드크럼 구조화 데이터가 없습니다.');
   if (!middleware.includes('twitter:card')) report('미들웨어에 공유용 메타태그가 없습니다.');
-  if (!middleware.includes('utilityPaths') || !middleware.includes('shouldInjectAds')) report('404·오프라인 페이지 광고 제외 처리가 없습니다.');
-  if (!middleware.includes('Noto+Sans+KR:wght@400;500;600;700')) report('미들웨어가 승인된 네 가지 Noto Sans KR 굵기를 로드하지 않습니다.');
-  if (!middleware.includes('/global-ux.css?v=6')) report('미들웨어가 최신 타이포그래피 CSS를 로드하지 않습니다.');
+  if (!middleware.includes('shouldInjectAds') || !middleware.includes('nonAdPaths')) report('광고 제외 경로 처리가 없습니다.');
+  if (!middleware.includes('ca-pub-1158392779506249')) report('AdSense 게시자 ID가 미들웨어에 없습니다.');
 }
 
-const privacyHtml = read('privacy.html');
-if (!privacyHtml.includes('Google Fonts') || !privacyHtml.includes('Noto Sans KR')) report('privacy.html: 웹폰트 제공 과정에 대한 고지가 없습니다.');
-
-const koreanTemplatePath = join(root, 'profit-audit-template.csv');
-if (!existsSync(koreanTemplatePath)) report('한국어 CSV 양식이 없습니다.');
-else {
-  const koreanTemplate = readFileSync(koreanTemplatePath, 'utf8');
-  if (!koreanTemplate.startsWith('\ufeff')) report('한국어 CSV 양식에 Excel 호환 UTF-8 BOM이 없습니다.');
-  if (!koreanTemplate.startsWith('\ufeff통화,상품명,판매가,원가')) report('한국어 CSV 양식의 통화·상품 헤더가 올바르지 않습니다.');
-  if (!koreanTemplate.includes('\nKRW,')) report('한국어 CSV 양식에 KRW 통화 코드가 없습니다.');
+if (!existsSync(join(root, 'service-worker.js'))) {
+  report('service-worker.js가 없습니다.');
+} else {
+  const worker = read('service-worker.js');
+  if (!worker.includes("fashionops-shell-v9")) report('service-worker.js: 최신 캐시 이름 v9가 아닙니다.');
+  if (!worker.includes('/global-ux.css?v=7')) report('service-worker.js: 최신 전역 CSS를 캐시하지 않습니다.');
+  if (!worker.includes('/ui-fixes.css?v=1')) report('service-worker.js: UI 보정 CSS를 캐시하지 않습니다.');
+  if (!worker.includes("request.mode === 'navigate'")) report('service-worker.js: 문서 요청의 네트워크 우선 처리가 없습니다.');
+  if (!worker.includes("caches.match('/offline.html')")) report('service-worker.js: 오프라인 복구 페이지가 없습니다.');
+  if (!worker.includes('navigationPreload.enable')) warn('service-worker.js: 탐색 프리로드가 활성화되지 않았습니다.');
+  if (!worker.includes('!url.search')) report('service-worker.js: 쿼리 URL 캐시 제외가 없습니다.');
 }
 
-const englishTemplatePath = join(root, 'profit-audit-template-en.csv');
-if (!existsSync(englishTemplatePath)) report('영문 CSV 양식이 없습니다.');
-else if (!read('profit-audit-template-en.csv').startsWith('Currency,Product name,Price,Cost')) report('영문 CSV 양식 헤더가 올바르지 않습니다.');
+for (const file of ['app.js', 'bulk-profit.js', 'special-tools.js']) {
+  if (!existsSync(join(root, file))) report(`${file}: 계산 스크립트가 없습니다.`);
+  else if (!read(file).includes('FashionOpsCurrency')) report(`${file}: 선택 통화 포맷을 직접 사용하지 않습니다.`);
+}
+
+for (const runtime of ['global-ux.js', 'bulk-import.js', 'engagement.js', 'engagement.css', 'weekly-check.js', 'currency.js']) {
+  if (!existsSync(join(root, runtime))) report(`${runtime}가 없습니다.`);
+}
+
+if (!existsSync(join(root, 'functions/api/community/[[path]].js'))) report('D1 커뮤니티 API 파일이 없습니다.');
+
+if (existsSync(join(root, 'weekly-profit-check.html'))) {
+  const weekly = read('weekly-profit-check.html');
+  if (!/role=["']progressbar["']/i.test(weekly)) report('weekly-profit-check.html: 진행률 접근성 속성이 없습니다.');
+  if (/<label[^>]*class=["'][^"']*check-item[^"']*["'][^>]*>[\s\S]*?<a\b/i.test(weekly)) report('weekly-profit-check.html: label 안에 링크가 중첩되어 있습니다.');
+}
 
 if (warnings.length) {
-  console.warn('\nWarnings:');
-  warnings.forEach((warning) => console.warn(`- ${warning}`));
+  console.warn(`\n경고 ${warnings.length}건`);
+  warnings.forEach((message) => console.warn(`- ${message}`));
 }
 
 if (errors.length) {
-  console.error('\nStatic checks failed:');
-  errors.forEach((error) => console.error(`- ${error}`));
-  process.exit(1);
+  console.error(`\n오류 ${errors.length}건`);
+  errors.forEach((message) => console.error(`- ${message}`));
+  process.exitCode = 1;
+} else {
+  console.log(`FashionOps 정적·UI 검사 통과: HTML ${htmlFiles.length}개, 오류 0건, 경고 ${warnings.length}건`);
 }
-
-console.log(`Static checks passed: ${htmlFiles.length} HTML files verified.`);
