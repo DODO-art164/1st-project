@@ -4,6 +4,7 @@ const FONT_PRECONNECT = '<link rel="preconnect" href="https://fonts.googleapis.c
 const FONT_STATIC_PRECONNECT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
 const FONT_STYLESHEET = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">';
 const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=7">';
+const UI_FIXES = '<link rel="stylesheet" href="/ui-fixes.css?v=1">';
 const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=3" defer></script>';
 const GLOBAL_CURRENCY = '<script src="/currency.js?v=4"></script>';
 const BULK_IMPORT_SCRIPT = '<script src="/bulk-import.js?v=1" defer></script>';
@@ -126,6 +127,7 @@ export async function onRequest(context) {
     if (shouldInjectAds && !html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1158392779506249')) tags.push(ADSENSE_SCRIPT);
     if (shouldInjectAds && !html.includes('name="google-adsense-account"')) tags.push(ADSENSE_META);
     if (!html.includes('/global-ux.css')) tags.push(GLOBAL_UX);
+    if (!html.includes('/ui-fixes.css')) tags.push(UI_FIXES);
     if (needsGlobalUxScript && !html.includes('/global-ux.js')) tags.push(GLOBAL_UX_SCRIPT);
     if (needsCurrency && !html.includes('/currency.js')) tags.push(GLOBAL_CURRENCY);
     if (needsBulkImport && !html.includes('/bulk-import.js')) tags.push(BULK_IMPORT_SCRIPT);
