@@ -9,12 +9,6 @@ const GLOBAL_CURRENCY = '<script src="/currency.js?v=4"></script>';
 const BULK_IMPORT_SCRIPT = '<script src="/bulk-import.js?v=1" defer></script>';
 const ENGAGEMENT_CSS = '<link rel="stylesheet" href="/engagement.css?v=1">';
 const ENGAGEMENT_SCRIPT = '<script src="/engagement.js?v=2" defer></script>';
-const HOME_STYLE = '<link rel="stylesheet" href="/stitch-home.css?v=2">';
-const HOME_UI_SCRIPT = '<script src="/home-ui.js?v=2" defer></script>';
-const HOME_I18N_SCRIPT = '<script src="/home-i18n.js?v=2" defer></script>';
-const HOME_HREFLANG_KO = '<link rel="alternate" hreflang="ko" href="https://1st-project-3aj.pages.dev/">';
-const HOME_HREFLANG_EN = '<link rel="alternate" hreflang="en" href="https://1st-project-3aj.pages.dev/?lang=en">';
-const HOME_HREFLANG_DEFAULT = '<link rel="alternate" hreflang="x-default" href="https://1st-project-3aj.pages.dev/">';
 const SITE_ORIGIN = 'https://1st-project-3aj.pages.dev';
 
 const currencyPaths = new Set([
@@ -87,7 +81,7 @@ function metadataFor(html, pathname, isErrorResponse) {
       ? {
           '@context': 'https://schema.org',
           '@graph': [
-            { '@type': 'WebSite', name: 'FashionOps', url: `${SITE_ORIGIN}/`, inLanguage: ['ko-KR', 'en'] },
+            { '@type': 'WebSite', name: 'FashionOps', url: `${SITE_ORIGIN}/`, inLanguage: 'ko-KR' },
             { '@type': 'Organization', name: 'FashionOps', url: `${SITE_ORIGIN}/`, logo: `${SITE_ORIGIN}/favicon.svg` }
           ]
         }
@@ -112,7 +106,6 @@ export async function onRequest(context) {
 
   const pathname = new URL(context.request.url).pathname.replace(/\/$/, '') || '/';
   const isErrorResponse = response.status >= 400;
-  const isHome = !isErrorResponse && (pathname === '/' || pathname === '/index.html');
   const needsCurrency = !isErrorResponse && currencyPaths.has(pathname);
   const needsBulkImport = !isErrorResponse && (pathname === '/profit-audit' || pathname === '/profit-audit.html');
   const needsEngagement = !isErrorResponse && engagementPaths.has(pathname);
@@ -138,12 +131,6 @@ export async function onRequest(context) {
     if (needsBulkImport && !html.includes('/bulk-import.js')) tags.push(BULK_IMPORT_SCRIPT);
     if (needsEngagement && !html.includes('/engagement.css')) tags.push(ENGAGEMENT_CSS);
     if (needsEngagement && !html.includes('/engagement.js')) tags.push(ENGAGEMENT_SCRIPT);
-    if (isHome && !html.includes('/stitch-home.css')) tags.push(HOME_STYLE);
-    if (isHome && !html.includes('/home-ui.js')) tags.push(HOME_UI_SCRIPT);
-    if (isHome && !html.includes('/home-i18n.js')) tags.push(HOME_I18N_SCRIPT);
-    if (isHome && !html.includes('hreflang="ko"')) tags.push(HOME_HREFLANG_KO);
-    if (isHome && !html.includes('hreflang="en"')) tags.push(HOME_HREFLANG_EN);
-    if (isHome && !html.includes('hreflang="x-default"')) tags.push(HOME_HREFLANG_DEFAULT);
     if (tags.length) html = html.replace('</head>', `  ${tags.join('\n  ')}\n</head>`);
   }
 
