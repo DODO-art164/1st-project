@@ -3,7 +3,7 @@ const ADSENSE_META = '<meta name="google-adsense-account" content="ca-pub-115839
 const FONT_PRECONNECT = '<link rel="preconnect" href="https://fonts.googleapis.com">';
 const FONT_STATIC_PRECONNECT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
 const FONT_STYLESHEET = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">';
-const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=6">';
+const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=7">';
 const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=3" defer></script>';
 const GLOBAL_CURRENCY = '<script src="/currency.js?v=4"></script>';
 const BULK_IMPORT_SCRIPT = '<script src="/bulk-import.js?v=1" defer></script>';
