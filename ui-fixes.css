@@ -1,0 +1,90 @@
+/* FashionOps regression fixes — intentionally small and loaded after global-ux.css. */
+
+/* Preserve the wider headings intentionally declared by calculator pages. */
+.hero h1[style],
+.app-hero h1[style]{
+  max-width:min(920px,100%)!important;
+}
+
+/* Keep action text visually centered while retaining the directional arrow. */
+.calculate-button{
+  position:relative;
+  justify-content:center;
+  gap:12px;
+  padding:12px 50px 12px 20px;
+  line-height:1.35;
+  text-align:center;
+}
+.calculate-button span{
+  display:block;
+  min-width:0;
+  line-height:1.35;
+  text-align:center;
+}
+.calculate-button b{
+  position:absolute;
+  right:19px;
+  top:50%;
+  display:grid;
+  place-items:center;
+  width:22px;
+  height:22px;
+  line-height:1;
+  transform:translateY(-50%);
+}
+.button,.copy-button{
+  height:auto;
+  padding-block:11px;
+  line-height:1.35;
+  text-align:center;
+}
+
+/* Restore icon and pagination proportions overridden by the generic button rule. */
+.row-remove{
+  min-width:44px;
+  min-height:44px;
+  padding:0;
+  font-size:22px;
+  line-height:1;
+}
+.community-pagination button{
+  min-width:42px;
+  padding:0;
+  border-radius:12px;
+}
+
+/* Normalize form text and placeholder alignment across browsers. */
+.input-wrap input,
+.community-field input,
+.community-comment-identity input,
+.audit-table input{
+  line-height:normal;
+}
+input::placeholder,
+textarea::placeholder{
+  color:#7a7165;
+  opacity:1;
+}
+
+/* Avoid delayed section sizing and scroll jumps on long pages. */
+.quick-next,.guide-hub,.compact-faq,.site-footer{
+  content-visibility:visible;
+  contain-intrinsic-size:none;
+}
+
+/* Prevent long labels from colliding with arrows on narrow screens. */
+@media(max-width:460px){
+  .calculate-button{
+    min-height:54px;
+    padding-inline:44px;
+  }
+  .calculate-button b{right:15px}
+}
+
+/* Keep controls distinguishable in Windows high-contrast mode. */
+@media(forced-colors:active){
+  .button,.calculate-button,.copy-button,.calculator-tab,.directory-filter,
+  .community-category,.community-mini-button,.community-pagination button{
+    border:1px solid ButtonText;
+  }
+}
