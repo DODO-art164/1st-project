@@ -1,10 +1,11 @@
-const CACHE_NAME = 'fashionops-shell-v8';
+const CACHE_NAME = 'fashionops-shell-v9';
 const CORE_ASSETS = [
   '/',
   '/offline.html',
   '/styles.css',
   '/ux.css',
-  '/global-ux.css?v=6',
+  '/global-ux.css?v=7',
+  '/ui-fixes.css?v=1',
   '/favicon.svg',
   '/manifest.webmanifest'
 ];
