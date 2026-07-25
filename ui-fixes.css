@@ -1,5 +1,10 @@
 /* FashionOps regression fixes — intentionally small and loaded after global-ux.css. */
 
+html{
+  color-scheme:light;
+  scrollbar-gutter:stable;
+}
+
 /* Preserve the wider headings intentionally declared by calculator pages. */
 .hero h1[style],
 .app-hero h1[style]{
@@ -70,6 +75,15 @@ textarea::placeholder{
 .quick-next,.guide-hub,.compact-faq,.site-footer{
   content-visibility:visible;
   contain-intrinsic-size:none;
+}
+
+/* Reduce blur compositing cost while scrolling on smaller devices. */
+@media(max-width:760px){
+  .site-header{
+    background:rgba(244,240,231,.985);
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
 }
 
 /* Prevent long labels from colliding with arrows on narrow screens. */
