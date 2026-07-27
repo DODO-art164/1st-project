@@ -91,7 +91,9 @@ requireText(middleware, 'const communityReady = Boolean(context.env.DB)', '미�
 requireText(middleware, '(!isCommunityHome || communityReady)', '미들웨어: 커뮤니티가 준비된 경우에만 광고를 허용하는 조건이 없습니다.');
 
 const worker = requireFile('service-worker.js');
-requireText(worker, 'fashionops-shell-v8', 'service-worker.js: 커뮤니티 캐시 정책이 반영된 최신 캐시 버전이 아닙니다.');
+requireText(worker, 'fashionops-shell-v9', 'service-worker.js: 커뮤니티 캐시 정책과 최신 UI 자산이 반영된 v9 캐시가 아닙니다.');
+requireText(worker, '/global-ux.css?v=7', 'service-worker.js: 최신 전역 디자인 CSS가 캐시되지 않습니다.');
+requireText(worker, '/ui-fixes.css?v=1', 'service-worker.js: UI 회귀 보정 CSS가 캐시되지 않습니다.');
 requireText(worker, "!url.pathname.startsWith('/community')", 'service-worker.js: 커뮤니티 HTML 캐시 제외가 없습니다.');
 requireText(worker, "!url.pathname.startsWith('/api/')", 'service-worker.js: API 요청 캐시 제외가 없습니다.');
 
