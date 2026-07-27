@@ -83,6 +83,7 @@ requireText(client, 'textContent = post.body', 'community.js: 게시물 본문�
 
 const middleware = requireFile('functions/_middleware.js');
 requireText(middleware, 'injectCommunityNav', '미들웨어: 전역 커뮤니티 메뉴 연결이 없습니다.');
+requireText(middleware, 'markCurrentNavigation', '미들웨어: 현재 메뉴 접근성 상태가 없습니다.');
 for (const path of ['/community-write.html', '/community-admin.html', '/community-rules.html']) {
   requireText(middleware, path, `미들웨어: ${path} 광고 제외가 없습니다.`);
 }
@@ -91,9 +92,9 @@ requireText(middleware, 'const communityReady = Boolean(context.env.DB)', '미�
 requireText(middleware, '(!isCommunityHome || communityReady)', '미들웨어: 커뮤니티가 준비된 경우에만 광고를 허용하는 조건이 없습니다.');
 
 const worker = requireFile('service-worker.js');
-requireText(worker, 'fashionops-shell-v9', 'service-worker.js: 커뮤니티 캐시 정책과 최신 UI 자산이 반영된 v9 캐시가 아닙니다.');
+requireText(worker, 'fashionops-shell-v10', 'service-worker.js: 커뮤니티 캐시 정책과 최신 UI 자산이 반영된 v10 캐시가 아닙니다.');
 requireText(worker, '/global-ux.css?v=7', 'service-worker.js: 최신 전역 디자인 CSS가 캐시되지 않습니다.');
-requireText(worker, '/ui-fixes.css?v=1', 'service-worker.js: UI 회귀 보정 CSS가 캐시되지 않습니다.');
+requireText(worker, '/ui-fixes.css?v=2', 'service-worker.js: 최신 UI 회귀 보정 CSS가 캐시되지 않습니다.');
 requireText(worker, "!url.pathname.startsWith('/community')", 'service-worker.js: 커뮤니티 HTML 캐시 제외가 없습니다.');
 requireText(worker, "!url.pathname.startsWith('/api/')", 'service-worker.js: API 요청 캐시 제외가 없습니다.');
 
