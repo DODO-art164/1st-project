@@ -1,15 +1,34 @@
-/* FashionOps regression fixes — intentionally small and loaded after global-ux.css. */
+/* FashionOps regression and consistency fixes.
+   This file is intentionally scoped and loaded after global-ux.css. */
 
 html{
   color-scheme:light;
   scrollbar-gutter:stable;
 }
+body{overflow-x:clip}
 
-/* Preserve the wider headings intentionally declared by calculator pages. */
+/* Preserve page-specific wide hero headings without forcing awkward short lines. */
 .hero h1[style],
 .app-hero h1[style]{
   max-width:min(920px,100%)!important;
 }
+
+/* Give long headings predictable wrapping across page-specific stylesheets. */
+.workspace-header h2,
+.section-heading h2,
+.faq-title h2,
+.compact-faq h2,
+.guide-hub h2,
+.weekly-summary h2,
+.check-group h2,
+.weekly-guide h2{
+  line-height:1.28;
+  letter-spacing:-.028em;
+  text-wrap:balance;
+}
+.calculator-head>div,
+.community-post-copy,
+.community-article-head{min-width:0}
 
 /* Keep action text visually centered while retaining the directional arrow. */
 .calculate-button{
@@ -43,8 +62,11 @@ html{
   line-height:1.35;
   text-align:center;
 }
+.calculator-tab,.directory-filter,.community-category,.community-mini-button{
+  line-height:1.25;
+}
 
-/* Restore icon and pagination proportions overridden by the generic button rule. */
+/* Restore proportions overridden by the generic control rule. */
 .row-remove{
   min-width:44px;
   min-height:44px;
@@ -54,21 +76,57 @@ html{
 }
 .community-pagination button{
   min-width:42px;
+  min-height:42px;
   padding:0;
   border-radius:12px;
 }
 
-/* Normalize form text and placeholder alignment across browsers. */
+/* Normalize form text, units and placeholders across browsers. */
 .input-wrap input,
 .community-field input,
 .community-comment-identity input,
 .audit-table input{
   line-height:normal;
 }
+.input-wrap i{
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+select,.community-sort,.currency-bar select{line-height:normal}
 input::placeholder,
 textarea::placeholder{
   color:#7a7165;
   opacity:1;
+}
+
+/* The home preview is a light card; do not inherit result-panel metric colors. */
+.preview-metrics div{
+  border-color:var(--line);
+  background:var(--card-2);
+}
+.preview-metrics small{color:var(--muted)}
+.preview-metrics b{color:var(--text)}
+
+/* Remove arbitrary card color changes so guides look consistent across pages. */
+.guide-link-card:nth-child(2){
+  background:var(--card);
+  color:var(--text);
+}
+.guide-link-card:nth-child(2) b{color:var(--text)}
+.guide-link-card:nth-child(2) span{color:var(--muted)}
+
+/* Keep long community and footer text from pushing the viewport wider. */
+.community-post-title,
+.community-post-title span:first-child{min-width:0}
+.footer-bottom{
+  flex-wrap:wrap;
+  align-items:center;
+}
+.footer-bottom span:last-child{
+  min-width:0;
+  overflow-wrap:anywhere;
 }
 
 /* Avoid delayed section sizing and scroll jumps on long pages. */
@@ -84,6 +142,10 @@ textarea::placeholder{
     backdrop-filter:none;
     -webkit-backdrop-filter:none;
   }
+  .main-nav a,
+  .main-nav a:not(.nav-cta),
+  .main-nav .nav-cta{line-height:1.25}
+  .calculator-head{align-items:center}
 }
 
 /* Prevent long labels from colliding with arrows on narrow screens. */
@@ -93,6 +155,17 @@ textarea::placeholder{
     padding-inline:44px;
   }
   .calculate-button b{right:15px}
+  .calculator-head{gap:14px}
+  .calculator-head h2{overflow-wrap:anywhere}
+}
+
+/* Stronger boundaries for users requesting additional contrast. */
+@media(prefers-contrast:more){
+  :root{--line:#9b8e79;--line-strong:#706451}
+  .button,.calculate-button,.copy-button,.calculator-tab,.directory-filter,
+  .community-category,.community-mini-button,.community-pagination button{
+    border-width:2px;
+  }
 }
 
 /* Keep controls distinguishable in Windows high-contrast mode. */
