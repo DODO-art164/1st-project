@@ -4,12 +4,14 @@ const FONT_PRECONNECT = '<link rel="preconnect" href="https://fonts.googleapis.c
 const FONT_STATIC_PRECONNECT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
 const FONT_STYLESHEET = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">';
 const GLOBAL_UX = '<link rel="stylesheet" href="/global-ux.css?v=7">';
-const UI_FIXES = '<link rel="stylesheet" href="/ui-fixes.css?v=1">';
+const UI_FIXES = '<link rel="stylesheet" href="/ui-fixes.css?v=2">';
 const GLOBAL_UX_SCRIPT = '<script src="/global-ux.js?v=3" defer></script>';
 const GLOBAL_CURRENCY = '<script src="/currency.js?v=4"></script>';
 const BULK_IMPORT_SCRIPT = '<script src="/bulk-import.js?v=1" defer></script>';
 const ENGAGEMENT_CSS = '<link rel="stylesheet" href="/engagement.css?v=1">';
 const ENGAGEMENT_SCRIPT = '<script src="/engagement.js?v=2" defer></script>';
+const THEME_COLOR_META = '<meta name="theme-color" content="#f4f0e7">';
+const COLOR_SCHEME_META = '<meta name="color-scheme" content="light">';
 const SITE_ORIGIN = 'https://1st-project-3aj.pages.dev';
 
 const currencyPaths = new Set([
@@ -48,6 +50,12 @@ function escapeAttribute(value = '') {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
+function normalizePagePath(pathname = '/') {
+  const clean = pathname.replace(/\/$/, '') || '/';
+  if (clean === '/index.html') return '/';
+  return clean.endsWith('.html') ? clean.slice(0, -5) || '/' : clean;
+}
+
 function injectCommunityNav(html) {
   if (/href=["']\/?community(?:\.html)?["']/i.test(html)) return html;
   return html.replace(/(<nav\b[^>]*class=["'][^"']*\bmain-nav\b[^"']*["'][^>]*>)([\s\S]*?)(<\/nav>)/i, (_match, open, content, close) => {
@@ -56,6 +64,29 @@ function injectCommunityNav(html) {
     const updated = cta ? content.replace(cta[0], `${link}${cta[0]}`) : `${content}${link}`;
     return `${open}${updated}${close}`;
   });
+}
+
+function markCurrentNavigation(html, pathname) {
+  const currentPath = normalizePagePath(pathname);
+  return html.replace(/(<nav\b[^>]*class=["'][^"']*\bmain-nav\b[^"']*["'][^>]*>)([\s\S]*?)(<\/nav>)/i, (_match, open, content, close) => {
+    const updated = content.replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>/gi, (tag, href) => {
+      if (/^(?:https?:)?\/\//i.test(href) || /^(?:mailto|tel|javascript):/i.test(href)) return tag;
+      let candidatePath;
+      try {
+        candidatePath = normalizePagePath(new URL(href, SITE_ORIGIN).pathname);
+      } catch {
+        return tag;
+      }
+      if (candidatePath !== currentPath || /\baria-current=/i.test(tag)) return tag;
+      return tag.replace(/^<a\b/i, '<a aria-current="page"');
+    });
+    return `${open}${updated}${close}`;
+  });
+}
+
+function normalizeThemeMetadata(html) {
+  const themePattern = /<meta\b(?=[^>]*\bname=["']theme-color["'])[^>]*>/i;
+  return themePattern.test(html) ? html.replace(themePattern, THEME_COLOR_META) : html;
 }
 
 function metadataFor(html, pathname, isErrorResponse) {
@@ -68,6 +99,8 @@ function metadataFor(html, pathname, isErrorResponse) {
     || `${SITE_ORIGIN}${pathname === '/' ? '/' : pathname}`;
   const tags = [];
 
+  if (!html.includes('name="theme-color"')) tags.push(THEME_COLOR_META);
+  if (!html.includes('name="color-scheme"')) tags.push(COLOR_SCHEME_META);
   if (!html.includes('property="og:site_name"')) tags.push('<meta property="og:site_name" content="FashionOps">');
   if (!html.includes('property="og:type"')) tags.push('<meta property="og:type" content="website">');
   if (!html.includes('property="og:title"')) tags.push(`<meta property="og:title" content="${escapeAttribute(title)}">`);
@@ -118,7 +151,9 @@ export async function onRequest(context) {
     && (!isCommunityHome || communityReady);
 
   let html = await response.text();
+  html = normalizeThemeMetadata(html);
   html = injectCommunityNav(html);
+  html = markCurrentNavigation(html, pathname);
   if (html.includes('</head>')) {
     const tags = metadataFor(html, pathname, isErrorResponse);
     if (!html.includes('fonts.googleapis.com/css2?family=Noto+Sans+KR')) {
@@ -139,6 +174,9 @@ export async function onRequest(context) {
   const headers = new Headers(response.headers);
   headers.delete('content-length');
   headers.delete('etag');
+  headers.set('x-content-type-options', 'nosniff');
+  headers.set('referrer-policy', 'strict-origin-when-cross-origin');
+  headers.set('permissions-policy', 'camera=(), microphone=(), geolocation=()');
 
   return new Response(html, {
     status: response.status,
