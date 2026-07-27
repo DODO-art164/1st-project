@@ -82,7 +82,7 @@ for (const feature of ['/posts?', '/comments', '/like', '/report', 'fashionops-c
 requireText(client, 'textContent = post.body', 'community.js: 게시물 본문을 안전한 textContent로 출력하지 않습니다.');
 
 const middleware = requireFile('functions/_middleware.js');
-requireText(middleware, 'injectCommunityNav', '미들웨어: 전역 커뮤니티 메뉴 연결이 없습니다.');
+requireText(middleware, 'normalizePrimaryNavigation', '미들웨어: 전역 기본 메뉴 통일 처리가 없습니다.');
 requireText(middleware, 'markCurrentNavigation', '미들웨어: 현재 메뉴 접근성 상태가 없습니다.');
 for (const path of ['/community-write.html', '/community-admin.html', '/community-rules.html']) {
   requireText(middleware, path, `미들웨어: ${path} 광고 제외가 없습니다.`);
