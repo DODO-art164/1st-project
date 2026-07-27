@@ -81,7 +81,7 @@ body{overflow-x:clip}
   border-radius:12px;
 }
 
-/* Normalize form text, units and placeholders across browsers. */
+/* Normalize form text, units, focus and placeholders across browsers. */
 .input-wrap input,
 .community-field input,
 .community-comment-identity input,
@@ -95,6 +95,19 @@ body{overflow-x:clip}
   justify-content:center;
 }
 select,.community-sort,.currency-bar select{line-height:normal}
+.community-field input:focus,
+.community-field select:focus,
+.community-field textarea:focus,
+.community-comment-form textarea:focus,
+.community-comment-identity input:focus,
+.weekly-notes textarea:focus,
+.audit-table input:focus,
+.community-sort:focus,
+.currency-bar select:focus{
+  outline:0;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(122,98,48,.14);
+}
 input::placeholder,
 textarea::placeholder{
   color:#7a7165;
