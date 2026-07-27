@@ -23,7 +23,15 @@ function balancedBraces(source) {
   let depth = 0;
   let quote = '';
   let escaped = false;
-  for (const char of source) {
+  let inComment = false;
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
+    if (inComment) {
+      if (char === '*' && next === '/') { inComment = false; index += 1; }
+      continue;
+    }
+    if (!quote && char === '/' && next === '*') { inComment = true; index += 1; continue; }
     if (escaped) { escaped = false; continue; }
     if (char === '\\') { escaped = true; continue; }
     if (quote) {
@@ -35,8 +43,11 @@ function balancedBraces(source) {
     if (char === '}') depth -= 1;
     if (depth < 0) return false;
   }
-  return depth === 0 && !quote;
+  return depth === 0 && !quote && !inComment;
 }
+
+let inlineStyleBlocks = 0;
+let inlineStyleAttributes = 0;
 
 for (const file of htmlFiles) {
   const html = read(file);
@@ -49,6 +60,8 @@ for (const file of htmlFiles) {
   if (!['404.html', 'offline.html'].includes(file)) {
     if (!/<link\s+rel=["']canonical["']/i.test(html)) report(`${file}: canonical 링크가 없습니다.`);
     if (!/<meta\s+name=["']description["']/i.test(html)) report(`${file}: description 메타태그가 없습니다.`);
+    if (!/<header\b[^>]*class=["'][^"']*site-header/i.test(html)) warn(`${file}: 공통 site-header 구조가 없습니다.`);
+    if (!/<footer\b[^>]*class=["'][^"']*site-footer/i.test(html)) warn(`${file}: 공통 site-footer 구조가 없습니다.`);
   }
 
   const ids = [...html.matchAll(/\sid=["']([^"']+)["']/gi)].map((match) => match[1]);
@@ -66,11 +79,17 @@ for (const file of htmlFiles) {
     if (!existsSync(join(root, normalized))) report(`${file}: 존재하지 않는 로컬 파일을 참조합니다: ${match[1]}`);
   }
 
+  inlineStyleBlocks += (html.match(/<style\b/gi) || []).length;
+  inlineStyleAttributes += (html.match(/\sstyle=["']/gi) || []).length;
+
   if (/cdn\.tailwindcss\.com/i.test(html)) report(`${file}: Tailwind CDN 사용이 금지되어 있습니다.`);
   if (/material-icons|material-symbols/i.test(html)) report(`${file}: Material Icons 사용이 금지되어 있습니다.`);
   if (html.includes('contact@fashionops.ai')) report(`${file}: 운영하지 않는 이메일 주소가 남아 있습니다.`);
   if (html.includes('online-store-net-profit-guide.html')) report(`${file}: 존재하지 않는 이전 가이드 주소가 남아 있습니다.`);
 }
+
+if (inlineStyleBlocks > 0) warn(`페이지 인라인 <style> 블록 ${inlineStyleBlocks}개가 남아 있습니다. 기능별 CSS로 점진적으로 이동하세요.`);
+if (inlineStyleAttributes > 0) warn(`인라인 style 속성 ${inlineStyleAttributes}개가 남아 있습니다. 공통 클래스로 점진적으로 이동하세요.`);
 
 const sitemapPath = join(root, 'sitemap.xml');
 if (!existsSync(sitemapPath)) {
@@ -125,7 +144,10 @@ if (!existsSync(join(root, 'ui-fixes.css'))) {
   if (!/\.calculate-button\s*\{[\s\S]*?justify-content:center/.test(fixes)) report('ui-fixes.css: 계산 버튼 텍스트 중앙 정렬 보정이 없습니다.');
   if (!/\.calculate-button b\s*\{[\s\S]*?position:absolute/.test(fixes)) report('ui-fixes.css: 계산 버튼 화살표 위치 보정이 없습니다.');
   if (!fixes.includes('max-width:min(920px,100%)!important')) report('ui-fixes.css: 인라인 제목 너비 회귀 보정이 없습니다.');
+  if (!fixes.includes('.preview-metrics div')) report('ui-fixes.css: 홈 미리보기 지표의 밝은 카드 복구가 없습니다.');
+  if (!fixes.includes('.guide-link-card:nth-child(2)')) report('ui-fixes.css: 가이드 카드 색상 통일 보정이 없습니다.');
   if (!fixes.includes('content-visibility:visible')) report('ui-fixes.css: 지연 렌더링으로 인한 스크롤 점프 방지 보정이 없습니다.');
+  if (!fixes.includes('overflow-x:clip')) report('ui-fixes.css: 작은 화면 가로 넘침 방지가 없습니다.');
   if (!fixes.includes('@media(forced-colors:active)')) warn('ui-fixes.css: Windows 고대비 모드 보정이 없습니다.');
 }
 
@@ -135,7 +157,11 @@ if (!existsSync(middlewarePath)) {
 } else {
   const middleware = read('functions/_middleware.js');
   if (!middleware.includes('/global-ux.css?v=7')) report('미들웨어가 최신 전역 디자인 CSS를 로드하지 않습니다.');
-  if (!middleware.includes('/ui-fixes.css?v=1')) report('미들웨어가 UI 회귀 보정 CSS를 로드하지 않습니다.');
+  if (!middleware.includes('/ui-fixes.css?v=2')) report('미들웨어가 최신 UI 회귀 보정 CSS를 로드하지 않습니다.');
+  if (!middleware.includes('normalizeThemeMetadata')) report('미들웨어가 페이지 테마색을 통일하지 않습니다.');
+  if (!middleware.includes('markCurrentNavigation')) report('미들웨어가 현재 메뉴 접근성 상태를 표시하지 않습니다.');
+  if (!middleware.includes('x-content-type-options')) report('미들웨어에 nosniff 보안 헤더가 없습니다.');
+  if (!middleware.includes('referrer-policy')) report('미들웨어에 Referrer-Policy가 없습니다.');
   if (!middleware.includes('/currency.js')) report('미들웨어가 통화 런타임을 로드하지 않습니다.');
   if (!middleware.includes('/global-ux.js')) report('미들웨어가 접근성 툴팁 런타임을 로드하지 않습니다.');
   if (!middleware.includes('/bulk-import.js')) report('미들웨어가 CSV 가져오기 런타임을 로드하지 않습니다.');
@@ -150,9 +176,9 @@ if (!existsSync(join(root, 'service-worker.js'))) {
   report('service-worker.js가 없습니다.');
 } else {
   const worker = read('service-worker.js');
-  if (!worker.includes("fashionops-shell-v9")) report('service-worker.js: 최신 캐시 이름 v9가 아닙니다.');
+  if (!worker.includes('fashionops-shell-v10')) report('service-worker.js: 최신 캐시 이름 v10이 아닙니다.');
   if (!worker.includes('/global-ux.css?v=7')) report('service-worker.js: 최신 전역 CSS를 캐시하지 않습니다.');
-  if (!worker.includes('/ui-fixes.css?v=1')) report('service-worker.js: UI 보정 CSS를 캐시하지 않습니다.');
+  if (!worker.includes('/ui-fixes.css?v=2')) report('service-worker.js: 최신 UI 보정 CSS를 캐시하지 않습니다.');
   if (!worker.includes("request.mode === 'navigate'")) report('service-worker.js: 문서 요청의 네트워크 우선 처리가 없습니다.');
   if (!worker.includes("caches.match('/offline.html')")) report('service-worker.js: 오프라인 복구 페이지가 없습니다.');
   if (!worker.includes('navigationPreload.enable')) warn('service-worker.js: 탐색 프리로드가 활성화되지 않았습니다.');
