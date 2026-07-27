@@ -146,6 +146,7 @@ if (!existsSync(join(root, 'ui-fixes.css'))) {
   if (!fixes.includes('max-width:min(920px,100%)!important')) report('ui-fixes.css: 인라인 제목 너비 회귀 보정이 없습니다.');
   if (!fixes.includes('.preview-metrics div')) report('ui-fixes.css: 홈 미리보기 지표의 밝은 카드 복구가 없습니다.');
   if (!fixes.includes('.guide-link-card:nth-child(2)')) report('ui-fixes.css: 가이드 카드 색상 통일 보정이 없습니다.');
+  if (!fixes.includes('.community-field input:focus')) report('ui-fixes.css: 커뮤니티 입력 포커스 색상 통일이 없습니다.');
   if (!fixes.includes('content-visibility:visible')) report('ui-fixes.css: 지연 렌더링으로 인한 스크롤 점프 방지 보정이 없습니다.');
   if (!fixes.includes('overflow-x:clip')) report('ui-fixes.css: 작은 화면 가로 넘침 방지가 없습니다.');
   if (!fixes.includes('@media(forced-colors:active)')) warn('ui-fixes.css: Windows 고대비 모드 보정이 없습니다.');
@@ -157,9 +158,11 @@ if (!existsSync(middlewarePath)) {
 } else {
   const middleware = read('functions/_middleware.js');
   if (!middleware.includes('/global-ux.css?v=7')) report('미들웨어가 최신 전역 디자인 CSS를 로드하지 않습니다.');
-  if (!middleware.includes('/ui-fixes.css?v=2')) report('미들웨어가 최신 UI 회귀 보정 CSS를 로드하지 않습니다.');
-  if (!middleware.includes('normalizeThemeMetadata')) report('미들웨어가 페이지 테마색을 통일하지 않습니다.');
+  if (!middleware.includes('/ui-fixes.css?v=3')) report('미들웨어가 최신 UI 회귀 보정 CSS를 로드하지 않습니다.');
+  if (!middleware.includes('normalizePrimaryNavigation')) report('미들웨어가 페이지별 기본 메뉴를 통일하지 않습니다.');
   if (!middleware.includes('markCurrentNavigation')) report('미들웨어가 현재 메뉴 접근성 상태를 표시하지 않습니다.');
+  if (!middleware.includes('normalizeThemeMetadata')) report('미들웨어가 페이지 테마색을 통일하지 않습니다.');
+  if (!middleware.includes('!isErrorResponse && !utilityPaths.has(pathname)')) report('미들웨어가 오류·오프라인 페이지의 단순 메뉴를 보존하지 않습니다.');
   if (!middleware.includes('x-content-type-options')) report('미들웨어에 nosniff 보안 헤더가 없습니다.');
   if (!middleware.includes('referrer-policy')) report('미들웨어에 Referrer-Policy가 없습니다.');
   if (!middleware.includes('/currency.js')) report('미들웨어가 통화 런타임을 로드하지 않습니다.');
@@ -176,14 +179,35 @@ if (!existsSync(join(root, 'service-worker.js'))) {
   report('service-worker.js가 없습니다.');
 } else {
   const worker = read('service-worker.js');
-  if (!worker.includes('fashionops-shell-v10')) report('service-worker.js: 최신 캐시 이름 v10이 아닙니다.');
+  if (!worker.includes('fashionops-shell-v11')) report('service-worker.js: 최신 캐시 이름 v11이 아닙니다.');
   if (!worker.includes('/global-ux.css?v=7')) report('service-worker.js: 최신 전역 CSS를 캐시하지 않습니다.');
-  if (!worker.includes('/ui-fixes.css?v=2')) report('service-worker.js: 최신 UI 보정 CSS를 캐시하지 않습니다.');
+  if (!worker.includes('/ui-fixes.css?v=3')) report('service-worker.js: 최신 UI 보정 CSS를 캐시하지 않습니다.');
   if (!worker.includes("request.mode === 'navigate'")) report('service-worker.js: 문서 요청의 네트워크 우선 처리가 없습니다.');
   if (!worker.includes("caches.match('/offline.html')")) report('service-worker.js: 오프라인 복구 페이지가 없습니다.');
   if (!worker.includes('navigationPreload.enable')) warn('service-worker.js: 탐색 프리로드가 활성화되지 않았습니다.');
   if (!worker.includes('!url.search')) report('service-worker.js: 쿼리 URL 캐시 제외가 없습니다.');
 }
+
+if (!existsSync(join(root, 'manifest.webmanifest'))) {
+  report('manifest.webmanifest가 없습니다.');
+} else {
+  try {
+    const manifest = JSON.parse(read('manifest.webmanifest'));
+    if (manifest.background_color !== '#f4f0e7' || manifest.theme_color !== '#f4f0e7') report('manifest.webmanifest: 설치 화면 색상이 현재 디자인 토큰과 다릅니다.');
+    if (!Array.isArray(manifest.shortcuts) || manifest.shortcuts.length < 4) report('manifest.webmanifest: 주요 재방문 바로가기가 부족합니다.');
+  } catch (error) {
+    report(`manifest.webmanifest: JSON 문법 오류가 있습니다: ${error.message}`);
+  }
+}
+
+if (!existsSync(join(root, 'favicon.svg'))) report('favicon.svg가 없습니다.');
+else {
+  const favicon = read('favicon.svg');
+  if (!favicon.includes('#171512') || !favicon.includes('#fffdf8')) report('favicon.svg: 현재 블랙·오프화이트 브랜드 색상이 적용되지 않았습니다.');
+}
+
+if (!existsSync(join(root, '_headers'))) report('_headers가 없습니다.');
+else if (!read('_headers').includes('/favicon.svg')) report('_headers: 파비콘 재검증 캐시 규칙이 없습니다.');
 
 for (const file of ['app.js', 'bulk-profit.js', 'special-tools.js']) {
   if (!existsSync(join(root, file))) report(`${file}: 계산 스크립트가 없습니다.`);
