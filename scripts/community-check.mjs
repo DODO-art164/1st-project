@@ -92,9 +92,9 @@ requireText(middleware, 'const communityReady = Boolean(context.env.DB)', '미�
 requireText(middleware, '(!isCommunityHome || communityReady)', '미들웨어: 커뮤니티가 준비된 경우에만 광고를 허용하는 조건이 없습니다.');
 
 const worker = requireFile('service-worker.js');
-requireText(worker, 'fashionops-shell-v10', 'service-worker.js: 커뮤니티 캐시 정책과 최신 UI 자산이 반영된 v10 캐시가 아닙니다.');
+requireText(worker, 'fashionops-shell-v11', 'service-worker.js: 커뮤니티 캐시 정책과 최신 UI 자산이 반영된 v11 캐시가 아닙니다.');
 requireText(worker, '/global-ux.css?v=7', 'service-worker.js: 최신 전역 디자인 CSS가 캐시되지 않습니다.');
-requireText(worker, '/ui-fixes.css?v=2', 'service-worker.js: 최신 UI 회귀 보정 CSS가 캐시되지 않습니다.');
+requireText(worker, '/ui-fixes.css?v=3', 'service-worker.js: 최신 UI 회귀 보정 CSS가 캐시되지 않습니다.');
 requireText(worker, "!url.pathname.startsWith('/community')", 'service-worker.js: 커뮤니티 HTML 캐시 제외가 없습니다.');
 requireText(worker, "!url.pathname.startsWith('/api/')", 'service-worker.js: API 요청 캐시 제외가 없습니다.');
 
@@ -105,6 +105,7 @@ for (const path of ['/community.html', '/community-rules.html']) {
 
 const manifest = JSON.parse(requireFile('manifest.webmanifest') || '{}');
 if (!manifest.shortcuts?.some((shortcut) => shortcut.url === '/community.html')) errors.push('manifest.webmanifest: 커뮤니티 바로가기가 없습니다.');
+if (manifest.background_color !== '#f4f0e7' || manifest.theme_color !== '#f4f0e7') errors.push('manifest.webmanifest: 커뮤니티 PWA 색상이 사이트 디자인과 다릅니다.');
 
 const privacy = requireFile('privacy.html');
 for (const phrase of ['Cloudflare D1', 'PBKDF2', 'SHA-256', 'Turnstile', '커뮤니티에서 저장하는 정보']) {
