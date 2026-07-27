@@ -21,13 +21,18 @@ const PRIMARY_NAV = [
   '<a class="nav-cta" href="/resources.html">전체 도구</a>'
 ].join('');
 
-const currencyPaths = new Set([
-  '/', '/index.html', '/profit-audit', '/profit-audit.html',
+const calculatorNavPaths = new Set([
+  '/', '/index.html',
   '/startup-cost-calculator', '/startup-cost-calculator.html',
   '/clothing-cost-calculator', '/clothing-cost-calculator.html',
   '/discount-profit-calculator', '/discount-profit-calculator.html',
   '/roas-calculator', '/roas-calculator.html',
   '/marketplace-profit-calculator', '/marketplace-profit-calculator.html'
+]);
+
+const currencyPaths = new Set([
+  ...calculatorNavPaths,
+  '/profit-audit', '/profit-audit.html'
 ]);
 
 const engagementPaths = new Set([
@@ -67,8 +72,14 @@ function normalizePrimaryNavigation(html) {
   return html.replace(/(<nav\b[^>]*class=["'][^"']*\bmain-nav\b[^"']*["'][^>]*>)[\s\S]*?(<\/nav>)/i, `$1${PRIMARY_NAV}$2`);
 }
 
+function navigationStatePath(pathname) {
+  if (calculatorNavPaths.has(pathname)) return '/';
+  if (normalizePagePath(pathname).startsWith('/community')) return '/community';
+  return normalizePagePath(pathname);
+}
+
 function markCurrentNavigation(html, pathname) {
-  const currentPath = normalizePagePath(pathname);
+  const currentPath = navigationStatePath(pathname);
   return html.replace(/(<nav\b[^>]*class=["'][^"']*\bmain-nav\b[^"']*["'][^>]*>)([\s\S]*?)(<\/nav>)/i, (_match, open, content, close) => {
     const updated = content.replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>/gi, (tag, href) => {
       if (/^(?:https?:)?\/\//i.test(href) || /^(?:mailto|tel|javascript):/i.test(href)) return tag;
@@ -153,8 +164,10 @@ export async function onRequest(context) {
 
   let html = await response.text();
   html = normalizeThemeMetadata(html);
-  html = normalizePrimaryNavigation(html);
-  html = markCurrentNavigation(html, pathname);
+  if (!isErrorResponse && !utilityPaths.has(pathname)) {
+    html = normalizePrimaryNavigation(html);
+    html = markCurrentNavigation(html, pathname);
+  }
   if (html.includes('</head>')) {
     const tags = metadataFor(html, pathname, isErrorResponse);
     if (!html.includes('fonts.googleapis.com/css2?family=Noto+Sans+KR')) {
