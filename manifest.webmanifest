@@ -7,7 +7,7 @@
   "scope": "/",
   "display": "standalone",
   "background_color": "#f4f0e7",
-  "theme_color": "#171512",
+  "theme_color": "#f4f0e7",
   "lang": "ko-KR",
   "categories": ["business", "finance", "productivity", "social"],
   "shortcuts": [
