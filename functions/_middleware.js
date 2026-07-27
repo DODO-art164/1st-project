@@ -13,6 +13,13 @@ const ENGAGEMENT_SCRIPT = '<script src="/engagement.js?v=2" defer></script>';
 const THEME_COLOR_META = '<meta name="theme-color" content="#f4f0e7">';
 const COLOR_SCHEME_META = '<meta name="color-scheme" content="light">';
 const SITE_ORIGIN = 'https://1st-project-3aj.pages.dev';
+const PRIMARY_NAV = [
+  '<a href="/index.html#tools">계산기</a>',
+  '<a href="/profit-audit.html">대량 분석</a>',
+  '<a href="/weekly-profit-check.html">주간 점검</a>',
+  '<a href="/community.html">커뮤니티</a>',
+  '<a class="nav-cta" href="/resources.html">전체 도구</a>'
+].join('');
 
 const currencyPaths = new Set([
   '/', '/index.html', '/profit-audit', '/profit-audit.html',
@@ -56,14 +63,8 @@ function normalizePagePath(pathname = '/') {
   return clean.endsWith('.html') ? clean.slice(0, -5) || '/' : clean;
 }
 
-function injectCommunityNav(html) {
-  if (/href=["']\/?community(?:\.html)?["']/i.test(html)) return html;
-  return html.replace(/(<nav\b[^>]*class=["'][^"']*\bmain-nav\b[^"']*["'][^>]*>)([\s\S]*?)(<\/nav>)/i, (_match, open, content, close) => {
-    const link = '<a href="/community.html">커뮤니티</a>';
-    const cta = content.match(/<a\b[^>]*class=["'][^"']*\bnav-cta\b[^"']*["'][^>]*>/i);
-    const updated = cta ? content.replace(cta[0], `${link}${cta[0]}`) : `${content}${link}`;
-    return `${open}${updated}${close}`;
-  });
+function normalizePrimaryNavigation(html) {
+  return html.replace(/(<nav\b[^>]*class=["'][^"']*\bmain-nav\b[^"']*["'][^>]*>)[\s\S]*?(<\/nav>)/i, `$1${PRIMARY_NAV}$2`);
 }
 
 function markCurrentNavigation(html, pathname) {
@@ -152,7 +153,7 @@ export async function onRequest(context) {
 
   let html = await response.text();
   html = normalizeThemeMetadata(html);
-  html = injectCommunityNav(html);
+  html = normalizePrimaryNavigation(html);
   html = markCurrentNavigation(html, pathname);
   if (html.includes('</head>')) {
     const tags = metadataFor(html, pathname, isErrorResponse);
